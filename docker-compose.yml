@@ -1,0 +1,12 @@
+## this file defines how to run our containers using docker-compose
+## it builds the image from the Dockerfile and runs it with port 8000 exposed
+## run with: docker-compose up --build
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/code/app
+    environment:
+      - PYTHONUNBUFFERED=1
