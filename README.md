@@ -13,13 +13,11 @@ POST /users - Create a new user
 DELETE /users/{user_id} - Delete a user
 
 ## Database
-SQLite database
-Database file: `app.db`
+CSV file
 
 ## Reminders
 I added a comment at the top of every file to explain what it does. Read it and let me know if you have any questions
 
-## __pycache__
-This directory is used to store compiled Python files so don't get intimidated when you see it
-You can delete it if you want to, it will be recreated automatically
+## Notes
+The database.py functions are unimplemented
 
