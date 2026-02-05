@@ -8,7 +8,9 @@ from app.database import Base
 
 class User(Base):
     __tablename__ = "users"
-
+ 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
+
+#When we have our UML for M2, we can add more models here.

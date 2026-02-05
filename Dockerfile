@@ -2,7 +2,7 @@
 ## It's so we don't have the famous "it works on my machine" problem
 ## After this file is created we can run the application using docker-compose up --build
 ## It should start the application on port 8000
-## Go to your browser and type http://localhost:8000/docs to see the swagger UI
+## Go to your browser and type http://localhost:8000/docs
 FROM python:3.11-slim
 WORKDIR /code
 COPY requirements.txt .

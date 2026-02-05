@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+venv/
+#Might need to add .env if we use it
