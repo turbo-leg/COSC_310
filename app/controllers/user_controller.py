@@ -5,16 +5,22 @@ each endpoint validates input, calls services, and returns responses
 """
 from fastapi import APIRouter, HTTPException, status
 from app.schemas import UserCreate, UserResponse, UserLogin
-from app.services import user_service 
+from app.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/", response_model=list[UserResponse])
 def read_users(skip: int = 0, limit: int = 100):
+    """
+    Retrieves list of all users.
+    """
     return user_service.get_users(skip=skip, limit=limit)
 
 @router.get("/{user_id}", response_model=UserResponse)
 def read_user(user_id: int):
+    """
+    Retrieves one user by id.
+    """
     user = user_service.get_user(user_id=user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -23,7 +29,7 @@ def read_user(user_id: int):
 @router.post("/")
 def create_user(user: UserCreate):
     """
-    his API endpoint signup new users and prevents duplicate emails.
+    This API endpoint signup new users and prevents duplicate emails.
     """
     db_user = user_service.get_user_by_email(email=user.email)
     if db_user:
@@ -52,6 +58,9 @@ def login_user(credentials: UserLogin):
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int):
+    """
+    Removes user by id.
+    """
     success = user_service.delete_user(user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")

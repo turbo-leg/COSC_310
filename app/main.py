@@ -13,4 +13,7 @@ app.include_router(user_controller.router)
 
 @app.get("/")
 async def root():
+    """
+    Returns API message.
+    """
     return {"message": "Lets go Sphixes"}

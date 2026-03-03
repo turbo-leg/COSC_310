@@ -4,13 +4,12 @@ users are loaded into a dictionary (map) at startup for O(1) lookup by ID
 I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
-import os
-from typing import Dict, Optional
+from typing import Dict
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 users_map: Dict[int, dict] = {}
-next_id: int = 1
+NEXT_ID: int = 1
 
-def load_users_from_csv(): 
+def load_users_from_csv():
    """
    Todo: Load users from CSV into the in-memory map
    """
@@ -33,17 +32,17 @@ def init_storage():
    """
    pass
 
-def get_all_users():
+def get_all_users(skip: int = 0, limit: int = 100):
     """
     Todo: Return a list of users
     """
     pass
 
 def get_user_by_id(user_id: int):
-    """
-    Quickly finds a user with their id number.
-    """
-    return users_map.get(user_id)
+   """
+   Quickly finds a user with their id number.
+   """
+   return users_map.get(user_id)
 
 def get_user_by_email(email: str):
    """
@@ -58,21 +57,21 @@ def create_user(name: str, email: str, password:str, role:str):
    """
    Creates a new user and add it to the csv file using save_users_to_csv
    """
-   global next_id
+   global NEXT_ID
    new_user = {
-      "userId": next_id,
+      "userId": NEXT_ID,
       "name": name,
       "email": email,
       "password": password,
       "role": role
    }
-   users_map[next_id] = new_user
-   next_id += 1
+   users_map[NEXT_ID] = new_user
+   NEXT_ID += 1
    save_users_to_csv()
    return new_user
    
 def delete_user(user_id: int):
-    """
-    Todo: Delete a user by ID
-    """
-    pass
+   """
+   Todo: Delete a user by ID
+   """
+   pass
