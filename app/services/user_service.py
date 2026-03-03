@@ -16,13 +16,11 @@ def get_users(skip: int = 0, limit: int = 100):
     """
     return database.get_all_users(skip=skip, limit=limit)
 
-
 def get_user(user_id: int):
     """
     Gets one user by ID.
     """
     return database.get_user_by_id(user_id)
-
 
 def get_user_by_email(email: str):
     """
@@ -30,8 +28,7 @@ def get_user_by_email(email: str):
     """
     return database.get_user_by_email(email)
 
-
-def create_user(user: UserCreate): 
+def create_user(user: UserCreate):
     """
     Creates and Saves new user.
     """
