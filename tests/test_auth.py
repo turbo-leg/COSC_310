@@ -72,4 +72,3 @@ def test_password_too_short():
     response = client.post("/users", json=fake_data)
     assert response.status_code == 422
     assert "password" in response.text
-

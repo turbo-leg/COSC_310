@@ -7,7 +7,7 @@ Lecture 9 - API Design, and REST architecture was helpful in understanding this
 from sqlalchemy import Column, Integer, String
 from app.database import Base
 
-class User(Base):
+class User(Base): # pylint: disable=too-few-public-methods
     """
     users table
     """

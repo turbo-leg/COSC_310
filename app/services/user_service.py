@@ -54,4 +54,3 @@ def delete_user(user_id: int):
     Deletes user from database.
     """
     return database.delete_user(user_id)
-
