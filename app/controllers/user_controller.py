@@ -1,6 +1,8 @@
-# This file defines REST API endpoints for User resources
-# controllers handle HTTP requests and delegate to services
-# each endpoint validates input, calls services, and returns responses
+"""
+This file defines REST API endpoints for User resources
+controllers handle HTTP requests and delegate to services
+each endpoint validates input, calls services, and returns responses
+"""
 from fastapi import APIRouter, HTTPException, status
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service 
@@ -23,7 +25,9 @@ def read_user(user_id: int):
 
 @router.post("/")
 def create_user(user: UserCreate):
-    # This API endpoint signup new users and prevents duplicate emails.
+    """
+    his API endpoint signup new users and prevents duplicate emails.
+    """
     db_user = user_service.get_user_by_email(email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -35,7 +39,9 @@ def create_user(user: UserCreate):
 
 @router.post("/login")
 def login_user(credentials: UserLogin):
-    # This API endpoint allows users to login with email and password.
+    """
+    This API endpoint allows users to login with email and password.
+    """
     user = user_service.verify_user_login(credentials.email, credentials.password)
     if not user:
         raise HTTPException(
@@ -46,7 +52,6 @@ def login_user(credentials: UserLogin):
         "message" : "Login Successful",
         "user": user
     }
-
 
 @router.delete("/{user_id}")
 def delete_user(user_id: int):
