@@ -11,11 +11,15 @@ users_map: Dict[int, dict] = {}
 next_id: int = 1
 
 def load_users_from_csv(): 
-   # Todo: Load users from CSV into the in-memory map
+   """
+   Todo: Load users from CSV into the in-memory map
+   """
    pass
 
 def save_users_to_csv():
-   """Saves all user data into a permanent CSV file."""
+   """
+   Saves all user data into a permanent CSV file.
+   """
    with open(CSV_FILE_PATH, mode = 'w', newline = '') as file:
       field_names = ["userId", "name", "email", "password", "role"]
       writer = csv.DictWriter(file, fieldnames = field_names)
@@ -24,26 +28,36 @@ def save_users_to_csv():
          writer.writerow(user)
 
 def init_storage():
-   # Todo: Initialize storage by loading users from CSV
+   """
+   Todo: Initialize storage by loading users from CSV
+   """
    pass
 
 def get_all_users():
-    # Todo: Return a list of users
+    """
+    Todo: Return a list of users
+    """
     pass
 
 def get_user_by_id(user_id: int):
-    """Quickly finds a user with their id number."""
+    """
+    Quickly finds a user with their id number.
+    """
     return users_map.get(user_id)
 
 def get_user_by_email(email: str):
-   """Lookup user by email"""
+   """
+   Lookup user by email
+   """
    for user in users_map.values():
       if user.get('email') == email:
          return user
    return None
    
 def create_user(name: str, email: str, password:str, role:str):
-   """Creates a new user and add it to the csv file using save_users_to_csv"""
+   """
+   Creates a new user and add it to the csv file using save_users_to_csv
+   """
    global next_id
    new_user = {
       "userId": next_id,
@@ -58,5 +72,7 @@ def create_user(name: str, email: str, password:str, role:str):
    return new_user
    
 def delete_user(user_id: int):
-    #Todo: Delete a user by ID
+    """
+    Todo: Delete a user by ID
+    """
     pass

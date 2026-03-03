@@ -9,11 +9,9 @@ from app.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-
 @router.get("/", response_model=list[UserResponse])
 def read_users(skip: int = 0, limit: int = 100):
     return user_service.get_users(skip=skip, limit=limit)
-
 
 @router.get("/{user_id}", response_model=UserResponse)
 def read_user(user_id: int):
@@ -21,7 +19,6 @@ def read_user(user_id: int):
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
-
 
 @router.post("/")
 def create_user(user: UserCreate):

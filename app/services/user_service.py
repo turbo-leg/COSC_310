@@ -20,7 +20,7 @@ def get_user_by_email(email: str):
     return database.get_user_by_email(email)
 
 
-def create_user(user: UserCreate):
+def create_user(user: UserCreate): 
     hashedPassword = auth_service.hashPassword(user.password)
     return database.create_user(
         name = user.name,

@@ -1,9 +1,15 @@
+"""
+Testing for the authentication logic.
+"""
 from fastapi.testclient import TestClient
 from app.main import app
 
 client = TestClient(app)
 
 def test_successful_registration():
+    """
+    Checks if regristration logic works.
+    """
     fake_data = {
         "name": "Test user",
         "email": "testuser@gmail.com",
@@ -16,6 +22,9 @@ def test_successful_registration():
     assert response.json()["user"]["email"] == "testuser@gmail.com"
 
 def test_duplicate_registration():
+    """
+    Checks if email duplicate catch logic works.
+    """
     fake_data = {
         "name": "Test user",
         "email": "testuser@gmail.com",
@@ -27,6 +36,9 @@ def test_duplicate_registration():
     assert response.json()["detail"] == "Email already registered"
 
 def test_successful_login():
+    """
+    Checks if login logic works.
+    """
     fake_data = {
         "email": "testuser@gmail.com",
         "password":"testuserpassword"
@@ -37,6 +49,9 @@ def test_successful_login():
     assert "user" in response.json()
 
 def test_failed_login():
+    """
+    Checks if bad login logic works.
+    """
     fake_data = {
         "email": "testuser@gmail.com",
         "password":"karibou"
@@ -46,6 +61,9 @@ def test_failed_login():
     assert response.json()["detail"] == "Invalid email or password"
 
 def test_password_too_short():
+    """
+    Checks if password rule logic works.
+    """
     fake_data = {
         "name": "Test user",
         "email": "testuser@gmail.com",
