@@ -1,6 +1,8 @@
-# This file manages in-memory user storage with CSV persistence
-# users are loaded into a dictionary (map) at startup for O(1) lookup by ID
-# I am not sure where to find the csv file is so we might need to adjut the path.
+"""
+This file manages in-memory user storage with CSV persistence
+users are loaded into a dictionary (map) at startup for O(1) lookup by ID
+I am not sure where to find the csv file is so we might need to adjut the path.
+"""
 import csv
 import os
 from typing import Dict, Optional
@@ -13,10 +15,10 @@ def load_users_from_csv():
    pass
 
 def save_users_to_csv():
-   # Saves all user data into a permanent CSV file.
+   """Saves all user data into a permanent CSV file."""
    with open(CSV_FILE_PATH, mode = 'w', newline = '') as file:
-      fieldNames = ["userId", "name", "email", "password", "role"]
-      writer = csv.DictWriter(file, fieldnames = fieldNames)
+      field_names = ["userId", "name", "email", "password", "role"]
+      writer = csv.DictWriter(file, fieldnames = field_names)
       writer.writeheader()
       for user in users_map.values():
          writer.writerow(user)
@@ -30,18 +32,18 @@ def get_all_users():
     pass
 
 def get_user_by_id(user_id: int):
-    # Todo: Lookup user by ID in O(1) time
+    """Quickly finds a user with their id number."""
     return users_map.get(user_id)
 
 def get_user_by_email(email: str):
-   # Todo: Lookup user by email
+   """Lookup user by email"""
    for user in users_map.values():
       if user.get('email') == email:
          return user
    return None
    
 def create_user(name: str, email: str, password:str, role:str):
-   # Todo: Create a new user and add it to the csv file using save_users_to_csv
+   """Creates a new user and add it to the csv file using save_users_to_csv"""
    global next_id
    new_user = {
       "userId": next_id,
