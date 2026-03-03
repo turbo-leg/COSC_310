@@ -1,4 +1,5 @@
 __pycache__/
 *.pyc
 venv/
+users.csv
 #Might need to add .env if we use it
