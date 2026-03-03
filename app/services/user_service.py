@@ -21,11 +21,11 @@ def get_user_by_email(email: str):
 
 
 def create_user(user: UserCreate): 
-    hashedPassword = auth_service.hashPassword(user.password)
+    hashed_password = auth_service.hash_password(user.password)
     return database.create_user(
         name = user.name,
         email = user.email,
-        password= hashedPassword,
+        password= hashed_password,
         role= "Regular User"
     )
 
