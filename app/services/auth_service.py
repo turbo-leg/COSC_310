@@ -43,6 +43,7 @@ class AuthService:
         """
         Clears the users session for a safe exit
         """
+        _ = user_id
         return True
 
 auth_service = AuthService()
