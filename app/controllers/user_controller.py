@@ -3,13 +3,14 @@ This file defines REST API endpoints for User resources
 controllers handle HTTP requests and delegate to services
 each endpoint validates input, calls services, and returns responses
 """
+from typing import List
 from fastapi import APIRouter, HTTPException, status
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("/", response_model=List[UserResponse])
 def read_users(skip: int = 0, limit: int = 100):
     """
     Retrieves list of all users.
