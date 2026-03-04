@@ -38,3 +38,20 @@ class UserResponse(UserBase): # pylint: disable=too-few-public-methods
         DocString
         """
         from_attributes = True
+
+class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
+    """
+    Schema for viewing incoming restaurant orders.
+    """
+    order_id: int
+    restaurant_id: int
+    food_item: str
+    order_time: str
+    order_value: float
+    customer_id: int
+
+    class Config: # pylint: disable=too-few-public-methods
+        """
+        DocString
+        """
+        from_attributes = True

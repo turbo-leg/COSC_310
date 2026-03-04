@@ -5,6 +5,7 @@ and creates the FastAPI app instance that Uvicorn runs
 """
 from fastapi import FastAPI
 from app.controllers import user_controller
+from app.controllers import order_controller
 
 
 #to be done:Initialize in-memory storage from CSV at startup database.init_storage(),
@@ -13,6 +14,7 @@ from app.controllers import user_controller
 app = FastAPI()
 
 app.include_router(user_controller.router)
+app.include_router(order_controller.router)
 
 @app.get("/")
 async def root():
