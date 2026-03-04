@@ -1,3 +1,7 @@
+"""
+Handles order-related operations.
+"""
+
 from sqlalchemy.orm import Session
 from app.models import Order
 
