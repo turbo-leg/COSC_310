@@ -46,7 +46,7 @@ def teardown_module(module): # pylint: disable=unused-argument
 
 def test_get_restaurant_menu_success():
     """
-    Test successful retrieval of active menu items for a restaurant.
+    Test retrieval of menu items for a restaurant.
     """
     response = client.get("/restaurant/100/menu")
     assert response.status_code == 200
@@ -57,7 +57,7 @@ def test_get_restaurant_menu_success():
 
 def test_get_restaurant_menu_not_found():
     """
-    Test 404 when restaurant does not exist.
+    Test 404 when restaurant does't exist.
     """
     response = client.get("/restaurant/999/menu")
     assert response.status_code == 404
