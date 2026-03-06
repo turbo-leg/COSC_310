@@ -4,8 +4,8 @@ users are loaded into a dictionary (map) at startup for O(1) lookup by ID
 I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
-import kagglehub
 from typing import Dict
+import kagglehub
 from sqlalchemy.ext.declarative import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
@@ -83,10 +83,13 @@ def delete_user(user_id: int):
 
 
 def download_dataset():
+    """
+    Downloads the Kaggle dataset and returns the local cache path.
+    """
     try:
         path = kagglehub.dataset_download("niszarkiah/food-delivery")
         return path
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-exception-caught
         print(f"Error downloading dataset: {e}")
         return None
 

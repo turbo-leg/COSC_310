@@ -49,4 +49,3 @@ class MenuItemResponse(BaseModel):
     description: str
     price: float
     isActive: bool
-

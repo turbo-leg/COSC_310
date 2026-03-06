@@ -1,3 +1,6 @@
+"""
+This module defines the API endpoints relating to menu and restaurant views.
+"""
 from typing import List
 from fastapi import APIRouter, HTTPException
 from app.database import restaurant_exists, get_active_menu_for_restaurant
@@ -10,7 +13,10 @@ router = APIRouter(
 
 @router.get("/{restaurant_id}/menu", response_model=List[MenuItemResponse])
 def get_restaurant_menu(restaurant_id: int):
+    """
+    Get active menu items for a specific restaurant.
+    """
     if not restaurant_exists(restaurant_id):
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    
+
     return get_active_menu_for_restaurant(restaurant_id)
