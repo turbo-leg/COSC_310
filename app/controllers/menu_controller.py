@@ -1,5 +1,5 @@
 """
-This module defines the API endpoints relating to menu and restaurant views.
+This file defines endpoints for menu-related logic.
 """
 from typing import List
 from fastapi import APIRouter, HTTPException
@@ -18,5 +18,4 @@ def get_restaurant_menu(restaurant_id: int):
     """
     if not restaurant_exists(restaurant_id):
         raise HTTPException(status_code=404, detail="Restaurant not found")
-
     return get_active_menu_for_restaurant(restaurant_id)

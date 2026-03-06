@@ -84,7 +84,7 @@ def delete_user(user_id: int):
 
 def download_dataset():
     """
-    Downloads the Kaggle dataset and returns the local cache path.
+    Downloads the Kaggle dataset and returns the local path
     """
     try:
         path = kagglehub.dataset_download("niszarkiah/food-delivery")
@@ -95,7 +95,7 @@ def download_dataset():
 
 def load_menu_items_from_csv():
     """
-    This loads menu items from the Kaggle dataset into memory at startup.
+    This loads menu items from the Kaggle dataset into memory at startup
     """
     global menu_items # pylint: disable=global-statement
     menu_items = []
