@@ -4,6 +4,7 @@ users are loaded into a dictionary (map) at startup for O(1) lookup by ID
 I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
+import kagglehub
 from typing import Dict
 from sqlalchemy.ext.declarative import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
@@ -81,23 +82,45 @@ def delete_user(user_id: int):
     _ = user_id
 
 
+def download_dataset():
+    try:
+        path = kagglehub.dataset_download("niszarkiah/food-delivery")
+        return path
+    except Exception as e:
+        print(f"Error downloading dataset: {e}")
+        return None
+
 def load_menu_items_from_csv():
     """
-    Loads menu items from CSV into memory.
+    This loads menu items from the Kaggle dataset into memory at startup.
     """
     global menu_items # pylint: disable=global-statement
     menu_items = []
+    dataset_path = download_dataset()
+    if not dataset_path:
+        return
+    csv_file_path = f"{dataset_path}/food_delivery.csv"
+
     try:
-        with open(MENU_CSV_FILE_PATH, mode='r', newline='', encoding='utf-8') as file:
+        seen_items = set()
+        item_counter = 1
+        with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
             for row in csv.DictReader(file):
-                menu_items.append({
-                    "itemId": int(row["itemId"]),
-                    "restaurantId": int(row.get("restaurantId", row.get("restaurant_id", 0))),
-                    "name": row["name"],
-                    "description": row["description"],
-                    "price": float(row["price"]),
-                    "isActive": str(row.get("isActive", row.get("active", "true"))).lower() == "true"
-                })
+                restaurant_id = int(row.get("restaurant_id", 0))
+                food_name = row.get("food_item", "Unknown Item")
+                unique_identifier = f"{restaurant_id}_{food_name}"
+                if unique_identifier not in seen_items:
+                    seen_items.add(unique_identifier)
+                    price = float(row.get("order_value", 10.0))
+                    menu_items.append({
+                        "itemId": item_counter,
+                        "restaurantId": restaurant_id,
+                        "name": food_name,
+                        "description": f"Delicious {food_name}",
+                        "price": price,
+                        "isActive": True
+                    })
+                    item_counter += 1
     except FileNotFoundError:
         pass
 
