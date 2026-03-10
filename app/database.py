@@ -6,7 +6,7 @@ I am not sure where to find the csv file is so we might need to adjut the path.
 import csv
 from typing import Dict, List
 import kagglehub
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
@@ -163,3 +163,19 @@ def get_active_menu_for_restaurant(restaurant_id: int):
         item for item in menu_items
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
+
+def find_restaurants_by_food_item(food_name: str):
+    """
+    Returns restaurants with the inputted food name. Only menu items with the food name are returned
+    """
+    food = food_name.strip().lower()
+    results = {}
+    for item in menu_items:
+        item_name = item.get("name", "").strip().lower()
+        if item.get("isActive", True) and food in item_name:
+            restaurant_id = item.get("restaurantId")
+            if restaurant_id not in results:
+                results[restaurant_id] = []
+            results[restaurant_id].append(item)
+    return results
+
