@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.controllers import user_controller
 from app.controllers import order_controller
-from app.controllers import user_controller, menu_controller
+from app.controllers import menu_controller
 from app import database
 
 @asynccontextmanager
