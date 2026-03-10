@@ -55,3 +55,13 @@ class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
         DocString
         """
         from_attributes = True
+class MenuItemResponse(BaseModel):
+    """
+    Schema for menu item response.
+    """
+    itemId: int
+    restaurantId: int
+    name: str
+    description: str
+    price: float
+    isActive: bool
