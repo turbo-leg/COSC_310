@@ -10,11 +10,11 @@ router = APIRouter()
 
 
 @router.post("/delivery/cost", response_model=DeliveryResponse)
-def get_delivery_cost(deliveryRequest: DeliveryRequest):
+def get_delivery_cost(delivery_request: DeliveryRequest):
     """
     Calculates the delivery cost based on distance and time.
     """
-    if deliveryRequest.distance_km <= 0:
+    if delivery_request.distance_km <= 0:
         # Validate distance and time inputs to prevent invalid calculations.
         raise HTTPException(
             status_code=400,
@@ -22,8 +22,8 @@ def get_delivery_cost(deliveryRequest: DeliveryRequest):
         )
 
     cost = calculate_delivery_cost(
-        deliveryRequest.distance_km,
-        deliveryRequest.time_minutes
+        delivery_request.distance_km,
+        delivery_request.time_minutes
     )
 
     return DeliveryResponse(cost=cost)
