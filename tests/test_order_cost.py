@@ -12,11 +12,11 @@ def setup_module(module): # pylint: disable=unused-argument
     Setup dummy data for testing.
     """
     database.menu_items = [
-        {"itemId": 3, "restaurantId": 1, "name": "Burger", 
+        {"itemId": 3, "restaurantId": 1, "name": "Burger",
          "description": "Good burger", "price": 15.00, "isActive": True},
-        {"itemId": 44, "restaurantId": 1, "name": "Fries", 
+        {"itemId": 44, "restaurantId": 1, "name": "Fries",
          "description": "Good fries", "price": 30.00, "isActive": True},
-        {"itemId": 81, "restaurantId": 1, "name": "Soda", 
+        {"itemId": 81, "restaurantId": 1, "name": "Soda",
          "description": "Good soda", "price": 36.72, "isActive": True}
     ]
 
