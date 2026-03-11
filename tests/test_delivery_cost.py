@@ -40,7 +40,7 @@ def test_delivery_price_valid_1():
 
 def test_delivery_price_valid_2():
     """
-    Test delivery cost calculation with valid inputs. Returns cost greater than 0 for a different delivery distance and time.
+    Test delivery for a different delivery distance and time.
     """
     response = client.post("/delivery/cost", json=valid_delivery_2)
 
