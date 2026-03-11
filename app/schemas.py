@@ -49,3 +49,18 @@ class MenuItemResponse(BaseModel):
     description: str
     price: float
     isActive: bool
+
+class DeliveryRequest(BaseModel):
+    """
+    Schema for delivery request.
+    """
+    distance_km: float
+    time_minutes: int
+
+
+class DeliveryResponse(BaseModel):
+    """
+    Schema for delivery response.
+    """
+    cost: float
+    
