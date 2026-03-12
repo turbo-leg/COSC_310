@@ -2,7 +2,8 @@
 Handles order-related operations.
 """
 
-from app.models import Order
+from app import database
+
 
 class OrderService:
     """
@@ -11,11 +12,9 @@ class OrderService:
 
     def get_orders_by_restaurant(self, restaurant_id: int):
         """
-        Returns all orders for a given restaurant.
+        Returns all incoming orders for a given restaurant.
         """
-        return [
-            order for order in Order.orders
-            if order.restaurant_id == restaurant_id
-        ]
+        return database.get_incoming_orders_for_restaurant(restaurant_id)
+
 
 order_service = OrderService()
