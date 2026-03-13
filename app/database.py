@@ -188,12 +188,12 @@ def create_order(user_id: int, restaurant_id: int, items: list):
 
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
-    Returns incoming (pending) orders for a specific restaurant.
+    Returns incoming orders for a specific restaurant.
     """
     return [
-        order for order in orders_map.values()
-        if order.get("restaurantId") == restaurant_id
-        and order.get("status") == "pending"
+        order
+        for order in orders_map
+        if order.restaurant_id == restaurant_id
     ]
 
 def get_all_orders():

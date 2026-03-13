@@ -2,6 +2,7 @@
 Tests for viewing incoming restaurant orders.
 """
 from fastapi.testclient import TestClient
+from app import database
 from app.main import app
 from app.models import Order
 
@@ -12,8 +13,7 @@ def setup_module(module):  # pylint: disable=unused-argument
     """
     Setup dummy order data for testing.
     """
-
-    Order.orders = [
+    database.orders_map = [
         Order(
             order_id=1,
             restaurant_id=100,
@@ -45,14 +45,14 @@ def teardown_module(module):  # pylint: disable=unused-argument
     """
     Cleanup dummy order data.
     """
-    Order.orders = []
+    database.orders_map = []
 
 
 def test_view_incoming_orders_success():
     """
     Test retrieval of orders for a restaurant.
     """
-    response = client.get("/restaurants/100/orders")
+    response = client.get("/orders/restaurants/100/orders")
 
     assert response.status_code == 200
     data = response.json()
@@ -66,7 +66,7 @@ def test_view_incoming_orders_empty():
     """
     Test restaurant with no orders.
     """
-    response = client.get("/restaurants/999/orders")
+    response = client.get("/orders/restaurants/999/orders")
 
     assert response.status_code == 200
     data = response.json()

@@ -20,7 +20,6 @@ async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(user_controller.router)
-app.include_router(order_controller.router)
 app.include_router(menu_controller.router)
 app.include_router(delivery_controller.router)
 app.include_router(order_controller.router)
