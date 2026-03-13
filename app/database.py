@@ -186,6 +186,15 @@ def create_order(user_id: int, restaurant_id: int, items: list):
 
     return new_order
 
+def get_order_status(order_id: int):
+    """
+    Returns the status of an order by its ID.
+    """
+    order = orders_map.get(order_id)
+    if order:
+        return order.get("status")
+    return None
+
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
     Returns incoming orders for a specific restaurant.
@@ -201,3 +210,16 @@ def get_all_orders():
     Returns all orders in memory.
     """
     return list(orders_map.values())
+
+def notify_customer(user_id: int):
+    """
+    Sends a notification to the customer when their order status changes.
+    """
+    user = users_map.get(user_id)
+    order_status = get_order_status(user_id)
+    if user:
+        message = f"Your order status is now: {order_status}"
+        return message
+
+    return None
+        
