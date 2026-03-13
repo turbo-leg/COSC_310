@@ -201,3 +201,41 @@ def get_all_orders():
     Returns all orders in memory.
     """
     return list(orders_map.values())
+
+def create_menu_item(restaurant_id: int, name: str, description: str, price: float):
+    """
+    Creates a new menu item for the given restaurant.
+    """
+    new_id = max((item["itemId"] for item in menu_items), default=0) + 1
+    new_item = {
+        "itemId": new_id,
+        "restaurantId": restaurant_id,
+        "name": name,
+        "description": description,
+        "price": price,
+        "isActive": True
+    }
+    menu_items.append(new_item)
+    return new_item
+
+def update_menu_item(item_id: int, restaurant_id: int, updates: dict):
+    """
+    Updates an existing menu item.
+    """
+    for item in menu_items:
+        if item["itemId"] == item_id and item["restaurantId"] == restaurant_id:
+            for key, value in updates.items():
+                if value is not None:
+                    item[key] = value
+            return item
+    return None
+
+def delete_menu_item(item_id: int, restaurant_id: int):
+    """
+    Deletes an existing menu item.
+    """
+    for i, item in enumerate(menu_items):
+        if item["itemId"] == item_id and item["restaurantId"] == restaurant_id:
+            del menu_items[i]
+            return True
+    return False

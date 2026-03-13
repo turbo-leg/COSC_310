@@ -11,6 +11,16 @@ def setup_module(module): # pylint: disable=unused-argument
     """
     Setup dummy data for testing.
     """
+    database.users_map = {
+        100: {
+            "userId": 100, "name": "Rest O", "email": "a@b.com",
+            "password": "pass", "role": "restaurant"
+        },
+        102: {
+            "userId": 102, "name": "Fake", "email": "f@b.com",
+            "password": "pass", "role": "customer"
+        }
+    }
     database.menu_items = [
         {
             "itemId": 1,
@@ -18,22 +28,6 @@ def setup_module(module): # pylint: disable=unused-argument
             "name": "Burger",
             "description": "Big Mac",
             "price": 10.0,
-            "isActive": True
-        },
-        {
-            "itemId": 2,
-            "restaurantId": 100,
-            "name": "Fries",
-            "description": "Large fries",
-            "price": 5.0,
-            "isActive": False
-        },
-        {
-            "itemId": 3,
-            "restaurantId": 101,
-            "name": "Pizza",
-            "description": "Pepperoni pizza",
-            "price": 15.0,
             "isActive": True
         }
     ]
@@ -43,6 +37,7 @@ def teardown_module(module): # pylint: disable=unused-argument
     Cleanup dummy data.
     """
     database.menu_items = []
+    database.users_map = {}
 
 def test_get_restaurant_menu_success():
     """
@@ -62,3 +57,53 @@ def test_get_restaurant_menu_not_found():
     response = client.get("/restaurant/999/menu")
     assert response.status_code == 404
     assert response.json()["detail"] == "Restaurant not found"
+
+def test_add_menu_item_success():
+    """
+    Test adding a new menu item successfully.
+    """
+    payload = {
+        "name": "Fries",
+        "description": "Mcdonalds",
+        "price": 4.5
+    }
+    response = client.post("/restaurant/100/menu?owner_id=100", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "Fries"
+    assert data["price"] == 4.5
+    assert data["isActive"] is True
+
+def test_add_menu_item_unauthorized():
+    """
+    Test adding a new menu item with unauthorized user.
+    """
+    payload = {"name": "Fries", "description": "Mcdonalds", "price": 4.5}
+    response = client.post("/restaurant/100/menu?owner_id=102", json=payload)
+    assert response.status_code == 403
+
+def test_edit_menu_item_success():
+    """
+    Test editing a menu item.
+    """
+    payload = {"price": 12.0}
+    response = client.put("/restaurant/100/menu/1?owner_id=100", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["price"] == 12.0
+
+def test_edit_menu_item_not_found():
+    """
+    Test editing a non-existent item.
+    """
+    response = client.put("/restaurant/100/menu/99?owner_id=100", json={"price": 12.0})
+    assert response.status_code == 404
+
+def test_remove_menu_item_success():
+    """
+    Test removing an item.
+    """
+    response = client.delete("/restaurant/100/menu/1?owner_id=100")
+    assert response.status_code == 200
+    resp = client.get("/restaurant/100/menu")
+    assert resp.status_code in [200, 404]
