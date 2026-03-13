@@ -195,6 +195,11 @@ def get_order_status(order_id: int):
         return order.get("status")
     return None
 
+def update_order_status(order_id: int, new_status: str):
+    """
+    TODO: Update the status of an order
+    """
+
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
     Returns incoming orders for a specific restaurant.
