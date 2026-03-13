@@ -18,13 +18,15 @@ class OrderService:
 
 
 order_service = OrderService()
-order_service.py handles the logic for orders/checkout total.
+order_service.py
+"""
+handles the logic for orders/checkout total.
 """
 from typing import List
 from app.services.delivery_service import calculate_delivery_cost
 from app import database
 
-def calculate_total_cost_of_order(item_ids: List[int], distance_km: float,
+def calculate_total_cost_of_order(item_ids: List[int], distance_km: float, 
                                   time_minutes: int) -> float:
     """
     Calculates the total cost of the order (total food price + delivery fee).
