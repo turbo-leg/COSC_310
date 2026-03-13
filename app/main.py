@@ -5,7 +5,7 @@ and creates the FastAPI app instance that Uvicorn runs
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.controllers import user_controller, menu_controller
+from app.controllers import user_controller, menu_controller, delivery_controller, order_controller
 from app import database
 
 @asynccontextmanager
@@ -21,6 +21,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(user_controller.router)
 app.include_router(menu_controller.router)
+app.include_router(delivery_controller.router)
+app.include_router(order_controller.router)
 
 
 @app.get("/")
