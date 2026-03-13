@@ -11,8 +11,11 @@ CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
+orders_map: Dict[int, dict] = {}
 Base = declarative_base()
 NEXT_ID: int = 1
+NEXT_ORDER_ID: int = 1
+
 
 def load_users_from_csv():
     """
@@ -163,3 +166,38 @@ def get_active_menu_for_restaurant(restaurant_id: int):
         item for item in menu_items
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
+
+def create_order(user_id: int, restaurant_id: int, items: list):
+    """
+    Creates a new order and stores it in memory.
+    """
+    global NEXT_ORDER_ID  # pylint: disable=global-statement
+
+    new_order = {
+        "orderId": NEXT_ORDER_ID,
+        "userId": user_id,
+        "restaurantId": restaurant_id,
+        "items": items,
+        "status": "pending"
+    }
+
+    orders_map[NEXT_ORDER_ID] = new_order
+    NEXT_ORDER_ID += 1
+
+    return new_order
+
+def get_incoming_orders_for_restaurant(restaurant_id: int):
+    """
+    Returns incoming orders for a specific restaurant.
+    """
+    return [
+        order
+        for order in orders_map
+        if order.restaurant_id == restaurant_id
+    ]
+
+def get_all_orders():
+    """
+    Returns all orders in memory.
+    """
+    return list(orders_map.values())
