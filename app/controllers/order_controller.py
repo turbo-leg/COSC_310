@@ -5,9 +5,11 @@ Controllers receive requests and call services to retrieve data.
 from typing import List
 
 from fastapi import APIRouter
+from pydantic import BaseModel
+
 
 from app.schemas import OrderResponse
-from app.services.order_service import order_service
+from app.services.order_service import order_service, calculate_total_cost_of_order
 
 router = APIRouter()
 
@@ -17,15 +19,6 @@ def view_incoming_orders(restaurant_id: int):
     Retrieves all incoming orders for a specific restaurant.
     """
     return order_service.get_orders_by_restaurant(restaurant_id)
-"""
-Endpoints for calculating total order cost.
-"""
-from typing import List
-from fastapi import APIRouter
-from pydantic import BaseModel
-from app.services.order_service import calculate_total_cost_of_order
-
-router = APIRouter(prefix="/orders", tags=["orders"])
 
 class TotalOrderRequest(BaseModel):
     """
