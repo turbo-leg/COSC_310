@@ -178,4 +178,3 @@ def find_restaurants_by_food_item(food_name: str):
                 results[restaurant_id] = []
             results[restaurant_id].append(item)
     return results
-
