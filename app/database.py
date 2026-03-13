@@ -6,7 +6,7 @@ I am not sure where to find the csv file is so we might need to adjut the path.
 import csv
 from typing import Dict, List
 import kagglehub
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
