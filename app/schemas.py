@@ -66,6 +66,23 @@ class MenuItemResponse(BaseModel):
     price: float
     isActive: bool
 
+class MenuItemCreate(BaseModel):
+    """
+    Schema for creating a menu item.
+    """
+    name: str
+    description: str
+    price: float
+
+class MenuItemUpdate(BaseModel):
+    """
+    Schema for updating a menu item.
+    """
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    isActive: bool | None = None
+
 class DeliveryRequest(BaseModel):
     """
     Schema for delivery request.
@@ -79,4 +96,3 @@ class DeliveryResponse(BaseModel):
     Schema for delivery response.
     """
     cost: float
-    
