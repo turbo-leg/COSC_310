@@ -222,4 +222,3 @@ def notify_customer(user_id: int):
         return message
 
     return None
-        
