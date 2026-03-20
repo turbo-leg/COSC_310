@@ -72,4 +72,3 @@ def test_view_incoming_orders_empty():
     data = response.json()
 
     assert data == []
-    
