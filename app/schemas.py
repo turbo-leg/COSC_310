@@ -99,9 +99,15 @@ class DeliveryResponse(BaseModel):
 
 
 class PaymentRequest(BaseModel):
+    """
+    Schema for Payment Request.
+    """
     order_id: int
     credit_card: str
 
 class PaymentResponse(BaseModel):
+    """
+    Schema for Payment Delivery.
+    """
     transaction_id: str
     message: str
