@@ -15,6 +15,7 @@ async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
     """
     # Initialize in-memory storage from CSV at startup
     database.init_storage()
+    # Startup complete
     yield
 
 app = FastAPI(lifespan=lifespan)
