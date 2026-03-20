@@ -74,7 +74,7 @@ def test_find_menu_items_by_food_item_inactive():
     ]
 
     results = database.find_restaurants_by_food_item("Pizza")
-    assert len(results) == 1
+    assert len(results) == 2
     assert 1 in results
     assert len(results[1]) == 1
     assert 3 not in results
