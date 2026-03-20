@@ -205,7 +205,7 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "status": "pending",
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
-        "estimatedArrivalTime": estimated_arrival_time.isoformat()
+        "estimatedArrivalTime": estimated_arrival_time.isoformat(),
         "payment_status": "pending"
     }
 
