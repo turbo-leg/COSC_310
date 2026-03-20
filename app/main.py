@@ -5,7 +5,8 @@ and creates the FastAPI app instance that Uvicorn runs
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.controllers import user_controller, menu_controller, delivery_controller, order_controller, payment_controller
+from app.controllers import user_controller, menu_controller, delivery_controller, order_controller
+from app.controllers import payment_controller
 from app import database
 
 @asynccontextmanager
