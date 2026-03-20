@@ -4,11 +4,11 @@ Controllers receive requests and call services to retrieve data.
 """
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 
-from app.schemas import OrderResponse
+from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
 from app.services.order_service import order_service, calculate_total_cost_of_order
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -38,6 +38,25 @@ def get_total_order_cost(request: TotalOrderRequest):
                                           time_minutes=request.time_minutes)
     return {"total_order_cost":total}
 
+@router.get("/{order_id}/track", response_model=TrackOrderResponse)
+def track_order(order_id: int):
+    """
+    Returns the status and ETA of a specific order.
+    """
+    result = order_service.track_order(order_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return result
+
+@router.patch("/{order_id}/status")
+def update_order_status(order_id: int, request: UpdateOrderStatusRequest):
+    """
+    Updates the status of an order (e.g., from 'pending' to 'preparing').
+    """
+    updated_order = order_service.update_order_status(order_id, request.new_status)
+    if not updated_order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return updated_order
 class PaymentUpdateRequest(BaseModel):
     """
     Schema for updating the payment status.
