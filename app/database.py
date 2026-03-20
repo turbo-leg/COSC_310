@@ -235,7 +235,7 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
     return [
         order for order in orders_map.values()
-        if order["restaurantId"] == restaurant_id
+        if order["restaurant_id"] == restaurant_id
     ]
 
 
