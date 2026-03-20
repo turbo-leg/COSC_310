@@ -4,7 +4,6 @@ Tests for viewing incoming restaurant orders.
 from fastapi.testclient import TestClient
 from app import database
 from app.main import app
-from app.models import Order
 
 client = TestClient(app)
 
