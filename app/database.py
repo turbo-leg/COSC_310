@@ -4,6 +4,7 @@ users are loaded into a dictionary (map) at startup for O(1) lookup by ID
 I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
+import datetime
 from typing import Dict, List
 import kagglehub
 from sqlalchemy.orm import declarative_base
@@ -181,33 +182,57 @@ def find_restaurants_by_food_item(food_name: str):
                 results[restaurant_id] = []
             results[restaurant_id].append(item)
     return results
-def create_order(user_id: int, restaurant_id: int, items: list):
+def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20):
     """
-    Creates a new order and stores it in memory.
+    Creates a new order and stores it in memory, with ETA Tracking.
     """
     global NEXT_ORDER_ID  # pylint: disable=global-statement
+
+    created_at = datetime.datetime.now()
+    # 15 minutes for restaurant prep, 5 minutes for pickup,
+    # plus the inputted time for delivery
+    estimated_delivery_minutes = 15 + 5 + time_minutes
+    estimated_arrival_time = created_at + datetime.timedelta(
+        minutes=estimated_delivery_minutes)
 
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
-        "status": "pending"
+        "status": "pending",
+        "createdAt": created_at.isoformat(),
+        "estimatedDeliveryMinutes": estimated_delivery_minutes,
+        "estimatedArrivalTime": estimated_arrival_time.isoformat()
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
     NEXT_ORDER_ID += 1
-
     return new_order
+
+def get_order_by_id(order_id: int):
+    """
+    Returns an order by its ID.
+    """
+    return orders_map.get(order_id)
+
+def update_order_status(order_id: int, new_status: str):
+    """
+    Updates the status of an existing order.
+    """
+    order = orders_map.get(order_id)
+    if order:
+        order["status"] = new_status
+        return order
+    return None
 
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
     Returns incoming orders for a specific restaurant.
     """
     return [
-        order
-        for order in orders_map
-        if order.restaurant_id == restaurant_id
+        order for order in orders_map.values()
+        if order["restaurantId"] == restaurant_id
     ]
 
 def get_all_orders():

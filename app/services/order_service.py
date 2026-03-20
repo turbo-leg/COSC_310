@@ -2,7 +2,7 @@
 Handles order-related operations.
 """
 from typing import List
-
+from datetime import datetime
 from app import database
 from app.services.delivery_service import calculate_delivery_cost
 
@@ -16,6 +16,34 @@ class OrderService:
         Returns all incoming orders for a given restaurant.
         """
         return database.get_incoming_orders_for_restaurant(restaurant_id)
+
+    def track_order(self, order_id: int):
+        """
+        Returns the status and ETA of a specific order.
+        """
+        order = database.get_order_by_id(order_id)
+        if not order:
+            return None
+
+        created_at = datetime.fromisoformat(order["createdAt"])
+        eta_minutes = order["estimatedDeliveryMinutes"]
+        estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+
+        elapsed_time = (datetime.now() - created_at).total_seconds() // 60
+        minutes_remaining = max(0, eta_minutes - elapsed_time)
+
+        return {
+            "orderId": order["orderId"],
+            "status": order["status"],
+            "estimatedArrivalTime": estimated_arrival.isoformat(),
+            "minutesRemaining": minutes_remaining
+        }
+
+    def update_order_status(self, order_id: int, new_status: str):
+        """
+        Updates the status of an order (e.g., from 'pending' to 'preparing').
+        """
+        return database.update_order_status(order_id, new_status)
 
 
 order_service = OrderService()

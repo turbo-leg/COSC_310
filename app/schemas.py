@@ -96,3 +96,18 @@ class DeliveryResponse(BaseModel):
     Schema for delivery response.
     """
     cost: float
+
+class TrackOrderResponse(BaseModel):
+    """
+    Schema for tracking order status and ETA.
+    """
+    orderId: int
+    status: str
+    estimatedArrivalTime: str
+    minutesRemaining: int
+
+class UpdateOrderStatusRequest(BaseModel):
+    """
+    Schema for updating order status.
+    """
+    new_status: str
