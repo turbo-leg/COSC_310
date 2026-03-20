@@ -16,6 +16,11 @@ class OrderService:
         Returns all incoming orders for a given restaurant.
         """
         return database.get_incoming_orders_for_restaurant(restaurant_id)
+    def update_payment(self, order_id: int, status: str):
+        """
+        Updates payment status of an order.
+        """
+        return database.update_payment_status(order_id, status)
 
     def track_order(self, order_id: int):
         """

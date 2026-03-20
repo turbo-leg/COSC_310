@@ -175,8 +175,10 @@ def find_restaurants_by_food_item(food_name: str):
     food = food_name.strip().lower()
     results = {}
     for item in menu_items:
+        if not item.get("isActive"):
+            continue
         item_name = item.get("name", "").strip().lower()
-        if item.get("isActive", True) and food in item_name:
+        if food in item_name:
             restaurant_id = item.get("restaurantId")
             if restaurant_id not in results:
                 results[restaurant_id] = []
@@ -204,6 +206,7 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat()
+        "payment_status": "pending"
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
@@ -234,6 +237,7 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
         order for order in orders_map.values()
         if order["restaurantId"] == restaurant_id
     ]
+
 
 def get_all_orders():
     """
@@ -278,3 +282,15 @@ def delete_menu_item(item_id: int, restaurant_id: int):
             del menu_items[i]
             return True
     return False
+
+def update_payment_status(order_id: int, new_status: str):
+    """
+    Updates payment status of an order.
+    """
+    order = orders_map.get(order_id)
+
+    if not order:
+        return None
+
+    order["payment_status"] = new_status
+    return order

@@ -57,3 +57,23 @@ def update_order_status(order_id: int, request: UpdateOrderStatusRequest):
     if not updated_order:
         raise HTTPException(status_code=404, detail="Order not found")
     return updated_order
+class PaymentUpdateRequest(BaseModel):
+    """
+    Schema for updating the payment status.
+    """
+    status: str  # "accepted" or "rejected"
+
+@router.patch("/{order_id}/payment")
+def update_payment_status(order_id: int, request: PaymentUpdateRequest):
+    """
+    Accepts or rejects payment for an order.
+    """
+    updated_order = order_service.update_payment(order_id, request.status)
+
+    if not updated_order:
+        return {"error": "Order not found"}
+
+    return {
+        "message": f"Payment {request.status}",
+        "order": updated_order
+    }
