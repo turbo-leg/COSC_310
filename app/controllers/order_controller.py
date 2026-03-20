@@ -37,3 +37,24 @@ def get_total_order_cost(request: TotalOrderRequest):
                                           distance_km=request.distance_km,
                                           time_minutes=request.time_minutes)
     return {"total_order_cost":total}
+
+class PaymentUpdateRequest(BaseModel):
+    """
+    Schema for updating the payment status.
+    """
+    status: str  # "accepted" or "rejected"
+
+@router.patch("/{order_id}/payment")
+def update_payment_status(order_id: int, request: PaymentUpdateRequest):
+    """
+    Accepts or rejects payment for an order.
+    """
+    updated_order = order_service.update_payment(order_id, request.status)
+
+    if not updated_order:
+        return {"error": "Order not found"}
+
+    return {
+        "message": f"Payment {request.status}",
+        "order": updated_order
+    }
