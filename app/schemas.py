@@ -111,3 +111,17 @@ class PaymentResponse(BaseModel):
     """
     transaction_id: str
     message: str
+class TrackOrderResponse(BaseModel):
+    """
+    Schema for tracking order status and ETA.
+    """
+    orderId: int
+    status: str
+    estimatedArrivalTime: str
+    minutesRemaining: int
+
+class UpdateOrderStatusRequest(BaseModel):
+    """
+    Schema for updating order status.
+    """
+    new_status: str
