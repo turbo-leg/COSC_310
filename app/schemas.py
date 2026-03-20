@@ -96,3 +96,12 @@ class DeliveryResponse(BaseModel):
     Schema for delivery response.
     """
     cost: float
+
+
+class PaymentRequest(BaseModel):
+    order_id: int
+    credit_card: str
+
+class PaymentResponse(BaseModel):
+    transaction_id: str
+    message: str
