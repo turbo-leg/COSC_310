@@ -14,28 +14,28 @@ def setup_module(module):  # pylint: disable=unused-argument
     """
     database.orders_map = {
         1: {
-            "order_id": 1,
-            "restaurant_id": 100,
-            "food_item": "Burger",
-            "order_time": "12:00",
-            "order_value": 10.0,
-            "customer_id": 1
+            "order_id": 1, "orderId": 1,
+            "restaurant_id": 100, "restaurantId": 100, 
+            "customer_id": 1, "userId": 1,
+            "food_item": "Burger", "items": [1], 
+            "order_time": "12:00", "order_value": 10.0, 
+            "status": "pending", "payment_status": "pending"
         },
         2: {
-            "order_id": 2,
-            "restaurant_id": 100,
-            "food_item": "Fries",
-            "order_time": "12:05",
-            "order_value": 5.0,
-            "customer_id": 2
+            "order_id": 2, "orderId": 2,
+            "restaurant_id": 100, "restaurantId": 100, 
+            "customer_id": 2, "userId": 2,
+            "food_item": "Fries", "items": [2], 
+            "order_time": "12:05", "order_value": 5.0, 
+            "status": "pending", "payment_status": "pending"
         },
         3: {
-            "order_id": 3,
-            "restaurant_id": 101,
-            "food_item": "Pizza",
-            "order_time": "12:10",
-            "order_value": 15.0,
-            "customer_id": 3
+            "order_id": 3, "orderId": 3,
+            "restaurant_id": 101, "restaurantId": 101, 
+            "customer_id": 3, "userId": 3,
+            "food_item": "Pizza", "items": [3], 
+            "order_time": "12:10", "order_value": 15.0, 
+            "status": "pending", "payment_status": "pending"
         }
     }
 
