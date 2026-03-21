@@ -294,3 +294,17 @@ def update_payment_status(order_id: int, new_status: str):
 
     order["payment_status"] = new_status
     return order
+
+def assign_delivery_to_order(order_id: int, delivery_id: int):
+    """
+    Assigns a delivery driver to an order.
+    """
+    order = orders_map.get(order_id)
+
+    if not order:
+        return None
+
+    order["deliveryId"] = delivery_id
+    order["status"] = "assigned"
+
+    return order
