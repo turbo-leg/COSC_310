@@ -243,8 +243,8 @@ def update_order_status(order_id: int, new_status: str):
     notification = {
         "orderId": order["orderId"],
         "userId": order["userId"],
-        "old_status": old_status,
-        "new_status": new_status,
+        "oldStatus": old_status,
+        "newStatus": new_status,
         "message": (
             f"Your order #{order['orderId']} status has changed from "
             f"{old_status} to {new_status}."
