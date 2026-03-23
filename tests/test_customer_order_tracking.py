@@ -152,8 +152,8 @@ def test_status_change_notifies_customer():
     assert len(updated["notifications"]) == 1
     assert updated["customerNotified"] is True
     assert updated["latestNotification"] is not None
-    assert updated["latestNotification"]["old_status"] == "pending"
-    assert updated["latestNotification"]["new_status"] == "preparing"
+    assert updated["latestNotification"]["oldStatus"] == "pending"
+    assert updated["latestNotification"]["newStatus"] == "preparing"
 
 def test_multiple_status_changes_still_notify_customer():
     """Customer should still be notified across multiple real status changes."""
