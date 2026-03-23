@@ -112,4 +112,3 @@ class UpdateOrderStatusRequest(BaseModel):
     Schema for updating order status.
     """
     new_status: Literal["pending", "preparing", "out_for_delivery", "delivered", "cancelled"]
-

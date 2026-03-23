@@ -54,4 +54,3 @@ def test_update_order_status_invalid_status():
     response = client.patch("/orders/1/status", json=request_data)
 
     assert response.status_code == 422  # Unprocessable Entity for validation error
-
