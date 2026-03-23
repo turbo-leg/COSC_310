@@ -2,10 +2,14 @@
 Token management utilities."""
 
 import jwt
+from jwt import JWTError
 
 SECRET = "secret123"
 
 def create_token(user):
+    """
+    Creates a JWT token with the user's email and role.
+    """
     return jwt.encode(
         {"email": user["email"], "role": user.get("role", "user")},
         SECRET,
@@ -15,8 +19,9 @@ def create_token(user):
 
 def decode_token(token):
     """
-    Verifies the token and returns the user information if valid."""
+    Verifies the token and returns the user information if valid.
+    """
     try:
         return jwt.decode(token, SECRET, algorithms=["HS256"])
-    except:
+    except JWTError:
         return None

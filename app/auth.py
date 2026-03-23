@@ -20,10 +20,10 @@ def get_user(authorization: str = Header(None)):
 
     return user
 
-from fastapi import HTTPException
-
 def require_admin(user= None):
+    """
+    Checks if the user has admin privileges.
+    """
     if not user or not user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
-

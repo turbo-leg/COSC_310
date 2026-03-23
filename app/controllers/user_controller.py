@@ -71,7 +71,6 @@ def delete_user(user_id: int, user=Depends(get_user)):
     Removes user by id.
     """
     require_admin(user)
-    
     success = user_service.delete_user(user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
