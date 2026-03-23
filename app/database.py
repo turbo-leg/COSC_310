@@ -228,3 +228,63 @@ def get_all_orders():
     Returns all orders in memory.
     """
     return list(orders_map.values())
+
+def get_order_status(user_id: int):
+    """
+    Returns the latest order status for a user, or None if no orders exist.
+    """
+    user_orders = [order for order in orders_map.values() if order.get("userId") == user_id]
+    if not user_orders:
+        return None
+    latest_order = max(user_orders, key=lambda order: order.get("orderId", 0))
+    return latest_order.get("status")
+
+def notify_customer(user_id: int):
+    """
+    Sends a notification to the customer when their order status changes.
+    """
+    user = users_map.get(user_id)
+    order_status = get_order_status(user_id)
+    if user:
+        message = f"Your order status is now: {order_status}"
+        return message
+
+    return None
+
+def create_menu_item(restaurant_id: int, name: str, description: str, price: float):
+    """
+    Creates a new menu item for the given restaurant.
+    """
+    new_id = max((item["itemId"] for item in menu_items), default=0) + 1
+    new_item = {
+        "itemId": new_id,
+        "restaurantId": restaurant_id,
+        "name": name,
+        "description": description,
+        "price": price,
+        "isActive": True
+    }
+    menu_items.append(new_item)
+    return new_item
+
+def update_menu_item(item_id: int, restaurant_id: int, updates: dict):
+    """
+    Updates an existing menu item.
+    """
+    for item in menu_items:
+        if item["itemId"] == item_id and item["restaurantId"] == restaurant_id:
+            for key, value in updates.items():
+                if value is not None:
+                    item[key] = value
+            return item
+    return None
+
+def delete_menu_item(item_id: int, restaurant_id: int):
+    """
+    Deletes an existing menu item.
+    """
+    for i, item in enumerate(menu_items):
+        if item["itemId"] == item_id and item["restaurantId"] == restaurant_id:
+            del menu_items[i]
+            return True
+    return False
