@@ -50,7 +50,8 @@ def test_update_order_status_invalid_status():
     """
     Test updating status with an invalid status value.
     """
-    request_data = UpdateOrderStatusRequest(new_status="invalid_status")
-    response = client.patch("/orders/1/status", json=request_data.dict())
+    request_data = {"new_status": "invalid_status"}
+    response = client.patch("/orders/1/status", json=request_data)
 
     assert response.status_code == 422  # Unprocessable Entity for validation error
+
