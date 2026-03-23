@@ -1,7 +1,11 @@
+"""
+Tests for updating order status.
+"""
+# pylint: disable=duplicate-code
+
 from fastapi.testclient import TestClient
 from app.main import app
 from app import database
-from app.controllers.order_controller import UpdateOrderStatusRequest
 from app.schemas import UpdateOrderStatusRequest
 
 client = TestClient(app)
