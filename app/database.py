@@ -7,12 +7,13 @@ import csv
 import datetime
 from typing import Dict, List
 import kagglehub
+from sqlalchemy.ext.declarative import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
 orders_map: Dict[int, dict] = {}
-Base = object
+Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
 
@@ -183,6 +184,20 @@ def find_restaurants_by_food_item(food_name: str):
                 results[restaurant_id] = []
             results[restaurant_id].append(item)
     return results
+
+def _build_status_notification(order: dict, old_status: str, new_status: str):
+    """
+    Build a simple customer notification message when an order status changes.
+    """
+    return{
+        "orderId": order.get("orderId"),
+        "userId": order.get("userId"),
+        "oldStatus": old_status,
+        "newStatus": new_status,
+        "message": f"Your order status has changed from {old_status} to {new_status}.",
+        "sentAt": datetime.datetime.now().isoformat()
+    }
+
 def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20):
     """
     Creates a new order and stores it in memory, with ETA Tracking.
@@ -205,12 +220,34 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending"
+        "payment_status": "pending",
+        "notifications": [],
+        "latestNotification": None,
+        "customerNotified": False
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
     NEXT_ORDER_ID += 1
     return new_order
+
+def update_order_status(order_id: int, new_status: str):
+    """
+    Updates the status of an existing order and sends a notification to the customer.
+    """
+    order = orders_map.get(order_id)
+    if not order:
+        return None
+
+    old_status = order.get("status")
+    order["status"] = new_status
+
+    # Send notification to customer
+    notification = _build_status_notification(order, old_status, new_status)
+    order["notifications"].append(notification)
+    order["latestNotification"] = notification
+    order["customerNotified"] = True
+
+    return order
 
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
