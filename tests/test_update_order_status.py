@@ -56,4 +56,3 @@ def test_update_order_status_invalid_status():
     updated_order = response.json()
     assert updated_order["status"] == ""
     assert updated_order["customerNotified"] is True
-
