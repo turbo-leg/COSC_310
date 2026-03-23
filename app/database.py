@@ -238,7 +238,6 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
         if order["restaurantId"] == restaurant_id
     ]
 
-
 def get_all_orders():
     """
     Returns all orders in memory.

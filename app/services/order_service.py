@@ -44,6 +44,28 @@ class OrderService:
             "minutesRemaining": minutes_remaining
         }
 
+    def track_order_for_restaurant(self, restaurant_id: int):
+        """
+        Returns delivery tracking info for all orders of a restaurant.
+        """
+        orders = database.get_incoming_orders_for_restaurant(restaurant_id)
+        tracking_info = []
+        for order in orders:
+            created_at = datetime.fromisoformat(order["createdAt"])
+            eta_minutes = order["estimatedDeliveryMinutes"]
+            estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+
+            elapsed_time = (datetime.now() - created_at).total_seconds() // 60
+            minutes_remaining = max(0, eta_minutes - elapsed_time)
+
+            tracking_info.append({
+                "orderId": order["orderId"],
+                "status": order["status"],
+                "estimatedArrivalTime": estimated_arrival.isoformat(),
+                "minutesRemaining": minutes_remaining
+            })
+        return tracking_info
+
     def update_order_status(self, order_id: int, new_status: str):
         """
         Updates the status of an order (e.g., from 'pending' to 'preparing').
