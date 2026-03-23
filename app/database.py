@@ -44,8 +44,7 @@ def get_all_users(skip: int = 0, limit: int = 100):
     """
     Todo: Return a list of users
     """
-    _ = skip
-    _= limit
+    return list(users_map.values())[skip : skip + limit]
 
 def get_user_by_id(user_id: int):
     """
