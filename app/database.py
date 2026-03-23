@@ -340,3 +340,13 @@ def modify_order_in_database(order_id: int, modify_data: dict) -> dict:
                 orders_map[order_id][key] = value
         return orders_map[order_id]
     return None
+
+def get_restaurant_revenue(restaurant_id: int) -> float:
+    """
+    Calculates total revenue from accepted payments for a restaurant.
+    """
+    total = 0.0
+    for order in orders_map.values():
+        if order.get("restaurantId") == restaurant_id and order.get("payment_status") == "accepted":
+            total += order.get("order_value", 0.0)
+    return total

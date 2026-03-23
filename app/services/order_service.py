@@ -22,7 +22,24 @@ class OrderService:
         """
         Updates payment status of an order.
         """
-        return database.update_payment_status(order_id, status)
+        if status.lower() in ["declined", "rejected"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Payment declined. Cannot process transaction."
+            )
+        updated_order = database.update_payment_status(order_id, status)
+        if not updated_order:
+            raise HTTPException(
+                status_code=404,
+                detail= "order not Found"
+            )
+        return updated_order
+
+    def get_restaurant_revenue(self, restaurant_id: int) -> float:
+        """
+        Returns total correct revenue of restaurant
+        """
+        return database.get_restaurant_revenue(restaurant_id)
 
     def track_order(self, order_id: int):
         """
