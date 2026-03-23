@@ -4,6 +4,7 @@ users are loaded into a dictionary (map) at startup for O(1) lookup by ID
 I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
+import datetime
 from typing import Dict, List
 import kagglehub
 from sqlalchemy.orm import declarative_base
@@ -167,63 +168,63 @@ def get_active_menu_for_restaurant(restaurant_id: int):
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
 
-def create_order(user_id: int, restaurant_id: int, items: list):
+def find_restaurants_by_food_item(food_name: str):
     """
-    Creates a new order and stores it in memory.
+    Returns restaurants with the inputted food name. Only menu items with the food name are returned
+    """
+    food = food_name.strip().lower()
+    results = {}
+    for item in menu_items:
+        if not item.get("isActive"):
+            continue
+        item_name = item.get("name", "").strip().lower()
+        if food in item_name:
+            restaurant_id = item.get("restaurantId")
+            if restaurant_id not in results:
+                results[restaurant_id] = []
+            results[restaurant_id].append(item)
+    return results
+def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20):
+    """
+    Creates a new order and stores it in memory, with ETA Tracking.
     """
     global NEXT_ORDER_ID  # pylint: disable=global-statement
+
+    created_at = datetime.datetime.now()
+    # 15 minutes for restaurant prep, 5 minutes for pickup,
+    # plus the inputted time for delivery
+    estimated_delivery_minutes = 15 + 5 + time_minutes
+    estimated_arrival_time = created_at + datetime.timedelta(
+        minutes=estimated_delivery_minutes)
 
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
-        "status": "pending"
+        "status": "pending",
+        "createdAt": created_at.isoformat(),
+        "estimatedDeliveryMinutes": estimated_delivery_minutes,
+        "estimatedArrivalTime": estimated_arrival_time.isoformat(),
+        "payment_status": "pending"
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
     NEXT_ORDER_ID += 1
-
     return new_order
-
-def get_order_status(order_id: int):
-    """
-    Returns the status of an order by its ID.
-    """
-    order = orders_map.get(order_id)
-    if order:
-        return order.get("status")
-    return None
-
-def update_order_status(order_id: int, new_status: str):
-    """
-    TODO: Update the status of an order
-    """
 
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
     Returns incoming orders for a specific restaurant.
     """
     return [
-        order
-        for order in orders_map
-        if order.restaurant_id == restaurant_id
+        order for order in orders_map.values()
+        if order["restaurantId"] == restaurant_id
     ]
+
 
 def get_all_orders():
     """
     Returns all orders in memory.
     """
     return list(orders_map.values())
-
-def notify_customer(user_id: int):
-    """
-    Sends a notification to the customer when their order status changes.
-    """
-    user = users_map.get(user_id)
-    order_status = get_order_status(user_id)
-    if user:
-        message = f"Your order status is now: {order_status}"
-        return message
-
-    return None
