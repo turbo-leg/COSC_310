@@ -4,9 +4,11 @@ controllers handle HTTP requests and delegate to services
 each endpoint validates input, calls services, and returns responses
 """
 from typing import List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service
+from app.auth import get_user, require_admin
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -38,7 +40,10 @@ def create_user(user: UserCreate):
     new_user =  user_service.create_user(user=user)
     return {
         "message": "SUCCESSFUL",
-        "user": new_user
+        "user": {
+            "name": new_user["name"],
+            "email": new_user["email"]
+    }
     }
 
 @router.post("/login")
@@ -54,15 +59,27 @@ def login_user(credentials: UserLogin):
         )
     return {
         "message" : "Login Successful",
-        "user": user
+        "user": {
+            "email": credentials.email
+        },
+        "token": user
     }
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int):
+def delete_user(user_id: int, user=Depends(get_user)):
     """
     Removes user by id.
     """
+    require_admin(user)
+    
     success = user_service.delete_user(user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
+
+@router.get("/me")
+def get_me(user=Depends(get_user)):
+    """
+    Returns the current logged in user's information.
+    """
+    return user

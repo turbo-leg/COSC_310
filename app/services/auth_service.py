@@ -5,6 +5,7 @@ Password Hashing and authentication checks.
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 from app import database
+from app.token import create_token
 
 class AuthService:
     """
@@ -27,7 +28,7 @@ class AuthService:
         if not user:
             return None
         if self.password_hasher.verify(password, user["password"]):
-            return user
+            return create_token(user)
         return None
 
     def authorize_user(self, user_id: int):
