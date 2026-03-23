@@ -7,13 +7,12 @@ import csv
 import datetime
 from typing import Dict, List
 import kagglehub
-from sqlalchemy.orm import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
 orders_map: Dict[int, dict] = {}
-Base = declarative_base()
+Base = object
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
 
