@@ -49,6 +49,7 @@ class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
     order_time: str
     order_value: float
     customer_id: int
+    status: str
 
     class Config: # pylint: disable=too-few-public-methods
         """
@@ -111,3 +112,11 @@ class UpdateOrderStatusRequest(BaseModel):
     Schema for updating order status.
     """
     new_status: str
+
+class OrderModifyRequest(BaseModel):
+    """
+    Schema for modifying orders.
+    """
+    food_item : str | None = None
+    order_value : float | None = None
+    items : list[int] | None = None
