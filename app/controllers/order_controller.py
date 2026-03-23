@@ -92,3 +92,9 @@ def modify_order_endpoint(order_id: int, modify_request: schemas.OrderModifyRequ
     Modify an order's details/items before preparation starts.
     """
     return order_service.modify_order(order_id, modify_request)
+@router.get("/restaurants/{restaurant_id}/track-delivery", response_model=List[TrackOrderResponse])
+def track_delivery_for_restaurant(restaurant_id: int):
+    """
+    Returns delivery tracking info for all orders of a restaurant.
+    """
+    return order_service.track_order_for_restaurant(restaurant_id)
