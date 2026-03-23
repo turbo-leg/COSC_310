@@ -16,7 +16,6 @@ class User(Base): # pylint: disable=too-few-public-methods
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
 
-#When we have our UML for M2, we can add more models here.
 
 class Order(Base): # pylint: disable=too-few-public-methods
     """
