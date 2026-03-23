@@ -2,7 +2,7 @@
 Token management utilities."""
 
 import jwt
-from jwt import JWTError
+from jose import JWTError
 
 SECRET = "secret123"
 
