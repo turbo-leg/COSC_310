@@ -115,4 +115,3 @@ def track_delivery_for_restaurant(restaurant_id: int):
     Returns delivery tracking info for all orders of a restaurant.
     """
     return order_service.track_order_for_restaurant(restaurant_id)
-
