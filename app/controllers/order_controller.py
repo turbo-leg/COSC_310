@@ -6,6 +6,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from app import schemas
 
 
 from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
@@ -78,6 +79,19 @@ def update_payment_status(order_id: int, request: PaymentUpdateRequest):
         "order": updated_order
     }
 
+@router.put("/{order_id}/cancel", response_model=schemas.OrderResponse)
+def cancel_order_endpoint(order_id: int):
+    """
+    Cancels order if preparation hasn't started yet.
+    """
+    return order_service.cancel_order(order_id)
+
+@router.put("/{order_id}/modify", response_model=schemas.OrderResponse)
+def modify_order_endpoint(order_id: int, modify_request: schemas.OrderModifyRequest):
+    """
+    Modify an order's details/items before preparation starts.
+    """
+    return order_service.modify_order(order_id, modify_request)
 @router.get("/restaurants/{restaurant_id}/track-delivery", response_model=List[TrackOrderResponse])
 def track_delivery_for_restaurant(restaurant_id: int):
     """

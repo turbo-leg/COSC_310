@@ -320,3 +320,23 @@ def update_payment_status(order_id: int, new_status: str):
 
     order["payment_status"] = new_status
     return order
+
+def cancel_order_in_database(order_id: int) -> dict:
+    """
+    Marks an order as status = `cancelled` in db.
+    """
+    if order_id in orders_map:
+        orders_map[order_id]["status"] = "cancelled"
+        return orders_map[order_id]
+    return None
+
+def modify_order_in_database(order_id: int, modify_data: dict) -> dict:
+    """
+    Modify specific values in the order.
+    """
+    if order_id in orders_map:
+        for key, value in modify_data.items():
+            if value is not None:
+                orders_map[order_id][key] = value
+        return orders_map[order_id]
+    return None

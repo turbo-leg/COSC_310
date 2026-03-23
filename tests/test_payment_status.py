@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """
 Testing for payment accept/reject functionality.
 """

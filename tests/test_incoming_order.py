@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """
 Tests for viewing incoming restaurant orders.
 """
