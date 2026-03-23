@@ -1,11 +1,12 @@
 """
 Handles order-related operations.
 """
+from fastapi import HTTPException
+
 from typing import List
 from datetime import datetime
 from app import database, schemas
 from app.services.delivery_service import calculate_delivery_cost
-from fastapi import HTTPException
 
 class OrderService:
     """
@@ -77,8 +78,8 @@ class OrderService:
             raise HTTPException(
                 status_code=400,
                 detail=f"""Cannot modify order. Current status is {order['status']}""")
-        update_order = database.modify_order_in_database(order_id, 
-                                                        modify_request.model_dump(exclude_unset=True))
+        update_order = database.modify_order_in_database(order_id,
+                        modify_request.model_dump(exclude_unset=True))
         return update_order
 
 

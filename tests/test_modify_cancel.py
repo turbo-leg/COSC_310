@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """
 Tests for modifying and cancelling orders.
 """
