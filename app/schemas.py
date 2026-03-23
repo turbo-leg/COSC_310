@@ -3,6 +3,7 @@ this file defines Pydantic schemas for request/response validation
 schemas ensure API data is correctly typed and structured
 they separate API contracts from database models for flexibility
 """
+from typing import Literal
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -110,4 +111,4 @@ class UpdateOrderStatusRequest(BaseModel):
     """
     Schema for updating order status.
     """
-    new_status: str
+    new_status: Literal["pending", "preparing", "out_for_delivery", "delivered", "cancelled"]
