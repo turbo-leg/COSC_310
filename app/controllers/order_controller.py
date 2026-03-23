@@ -77,3 +77,10 @@ def update_payment_status(order_id: int, request: PaymentUpdateRequest):
         "message": f"Payment {request.status}",
         "order": updated_order
     }
+
+@router.get("/restaurants/{restaurant_id}/track-delivery", response_model=List[TrackOrderResponse])
+def track_delivery_for_restaurant(restaurant_id: int):
+    """
+    Returns delivery tracking info for all orders of a restaurant.
+    """
+    return order_service.track_order_for_restaurant(restaurant_id)
