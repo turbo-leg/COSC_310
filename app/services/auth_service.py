@@ -39,6 +39,15 @@ class AuthService:
             return True
         return False
 
+    def authorize_admin(self, user_id: int):
+        """
+        Checks if a user is an admin.
+        """
+        user = database.get_user_by_id(user_id)
+        if user and user.get("role") == "admin":
+            return True
+        return False
+
     def logout(self, user_id: int):
         """
         Clears the users session for a safe exit

@@ -114,6 +114,14 @@ class UpdateOrderStatusRequest(BaseModel):
     """
     new_status: str
 
+class AdminStatsResponse(BaseModel):
+    """
+    Schema for Admin stats response.
+    """
+    total_users: int
+    total_orders: int
+    total_revenue: float
+    total_menu_items: int
 class OrderModifyRequest(BaseModel):
     """
     Schema for modifying orders.
