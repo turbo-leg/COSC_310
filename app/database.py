@@ -6,7 +6,6 @@ I am not sure where to find the csv file is so we might need to adjut the path.
 import csv
 import datetime
 from typing import Dict, List
-import kagglehub
 from sqlalchemy.orm import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
@@ -85,27 +84,13 @@ def delete_user(user_id: int):
     _ = user_id
 
 
-def download_dataset():
-    """
-    Downloads the Kaggle dataset and returns the local path
-    """
-    try:
-        path = kagglehub.dataset_download("niszarkiah/food-delivery")
-        return path
-    except Exception as e: # pylint: disable=broad-exception-caught
-        print(f"Error downloading dataset: {e}")
-        return None
-
 def load_menu_items_from_csv():
     """
-    This loads menu items from the Kaggle dataset into memory at startup
+    This loads menu items from the local CSV file into memory at startup
     """
     global menu_items # pylint: disable=global-statement
     menu_items = []
-    dataset_path = download_dataset()
-    if not dataset_path:
-        return
-    csv_file_path = f"{dataset_path}/food_delivery.csv"
+    csv_file_path = MENU_CSV_FILE_PATH
 
     try:
         seen_items = set()
