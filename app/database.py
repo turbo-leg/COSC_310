@@ -205,7 +205,10 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending"
+        "payment_status": "pending",
+        "notifications": [],
+        "latestNotification": None,
+        "customerNotified": False
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
@@ -223,10 +226,34 @@ def update_order_status(order_id: int, new_status: str):
     Updates the status of an existing order.
     """
     order = orders_map.get(order_id)
-    if order:
-        order["status"] = new_status
+    if not order:
+        return None
+
+    old_status = order["status"]
+
+    # Do not notify customer if the status does not change
+    if old_status == new_status:
+        order["customerNotified"] = False
+        order["latestNotification"] = None
         return order
-    return None
+
+    order["status"] = new_status
+
+    notification = {
+        "orderId": order["orderId"],
+        "userId": order["userId"],
+        "oldStatus": old_status,
+        "newStatus": new_status,
+        "message": (
+            f"Your order #{order['orderId']} status has changed from "
+            f"{old_status} to {new_status}."
+        ),
+        "sentAt": datetime.datetime.now().isoformat()
+    }
+    order["notifications"].append(notification)
+    order["latestNotification"] = notification
+    order["customerNotified"] = True
+    return order
 
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
@@ -236,7 +263,6 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
         order for order in orders_map.values()
         if order["restaurantId"] == restaurant_id
     ]
-
 
 def get_all_orders():
     """
@@ -293,3 +319,23 @@ def update_payment_status(order_id: int, new_status: str):
 
     order["payment_status"] = new_status
     return order
+
+def cancel_order_in_database(order_id: int) -> dict:
+    """
+    Marks an order as status = `cancelled` in db.
+    """
+    if order_id in orders_map:
+        orders_map[order_id]["status"] = "cancelled"
+        return orders_map[order_id]
+    return None
+
+def modify_order_in_database(order_id: int, modify_data: dict) -> dict:
+    """
+    Modify specific values in the order.
+    """
+    if order_id in orders_map:
+        for key, value in modify_data.items():
+            if value is not None:
+                orders_map[order_id][key] = value
+        return orders_map[order_id]
+    return None

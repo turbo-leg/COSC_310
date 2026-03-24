@@ -1,9 +1,11 @@
 """
 Handles order-related operations.
 """
+
 from typing import List
 from datetime import datetime
-from app import database
+from fastapi import HTTPException
+from app import database, schemas
 from app.services.delivery_service import calculate_delivery_cost
 
 class OrderService:
@@ -44,11 +46,64 @@ class OrderService:
             "minutesRemaining": minutes_remaining
         }
 
+    def track_order_for_restaurant(self, restaurant_id: int):
+        """
+        Returns delivery tracking info for all orders of a restaurant.
+        """
+        orders = database.get_incoming_orders_for_restaurant(restaurant_id)
+        tracking_info = []
+        for order in orders:
+            created_at = datetime.fromisoformat(order["createdAt"])
+            eta_minutes = order["estimatedDeliveryMinutes"]
+            estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+
+            elapsed_time = (datetime.now() - created_at).total_seconds() // 60
+            minutes_remaining = max(0, eta_minutes - elapsed_time)
+
+            tracking_info.append({
+                "orderId": order["orderId"],
+                "status": order["status"],
+                "estimatedArrivalTime": estimated_arrival.isoformat(),
+                "minutesRemaining": minutes_remaining
+            })
+        return tracking_info
+
     def update_order_status(self, order_id: int, new_status: str):
         """
         Updates the status of an order (e.g., from 'pending' to 'preparing').
         """
         return database.update_order_status(order_id, new_status)
+    def cancel_order(self, order_id: int):
+        """
+        Cancels Order.
+        """
+        order = database.get_order_by_id(order_id)
+        if not order:
+            raise HTTPException(status_code = 404, detail="Order Not Found")
+
+        if order["status"] not in ["pending", "accepted"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"""Cannot cancel order. Current status is {order['status']}""")
+        update_order = database.cancel_order_in_database(order_id)
+        return update_order
+
+
+    def modify_order(self, order_id: int, modify_request: schemas.OrderModifyRequest):
+        """
+        Modifies specific values in the order.
+        """
+        order = database.get_order_by_id(order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order Not Found")
+        if order["status"] not in ["pending", "accepted"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"""Cannot modify order. Current status is {order['status']}""")
+        update_order = database.modify_order_in_database(order_id,
+                        modify_request.model_dump(exclude_unset=True))
+        return update_order
+
 
 
 order_service = OrderService()
