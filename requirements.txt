@@ -10,3 +10,4 @@ pydantic[email]
 pylint
 kagglehub
 uuid
+pylint
