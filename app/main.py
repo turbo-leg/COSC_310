@@ -12,7 +12,8 @@ from app import database
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
     """
-    Lifespan context manager to handle startup and shutdown events.
+    Lifespan context manager to handle 
+    startup and shutdown events.
     """
     # Initialize in-memory storage from CSV at startup
     database.init_storage()
