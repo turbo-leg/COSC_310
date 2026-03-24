@@ -12,6 +12,13 @@ from app.auth import get_user, require_admin
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+@router.get("/me")
+def get_me(user=Depends(get_user)):
+    """
+    Returns the current logged in user's information.
+    """
+    return user
+
 @router.get("/", response_model=List[UserResponse])
 def read_users(skip: int = 0, limit: int = 100):
     """
@@ -75,10 +82,3 @@ def delete_user(user_id: int, user=Depends(get_user)):
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
-
-@router.get("/me")
-def get_me(user=Depends(get_user)):
-    """
-    Returns the current logged in user's information.
-    """
-    return user
