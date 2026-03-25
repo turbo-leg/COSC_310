@@ -62,3 +62,28 @@ def test_calculate_total_order_cost_item_not_found():
 
     assert "total_order_cost" in data
     assert data["total_order_cost"] == 91.47
+
+def test_partitioning_distance_total_cost():
+    """
+    Tests different values for distance_km.
+    """
+    response = client.post("/orders/calculate-total-cost", json={
+        "item_ids": [3, 44],
+        "distance_km": -5,
+        "time_minutes": 20
+    })
+    assert response.status_code== 400
+
+    response = client.post("/orders/calculate-total-cost", json={
+        "item_ids": [3, 44],
+        "distance_km": 0,
+        "time_minutes": 20
+    })
+    assert response.status_code == 200
+
+    response = client.post("/orders/calculate-total-cost", json={
+        "item_ids": [3, 44],
+        "distance_km": 2,
+        "time_minutes": 20
+    })
+    assert response.status_code == 200
