@@ -129,3 +129,17 @@ class OrderModifyRequest(BaseModel):
     food_item : str | None = None
     order_value : float | None = None
     items : List[int] | None = None
+
+class PaymentRequest(BaseModel):
+    """
+    Schema for Payment Request.
+    """
+    order_id: int
+    credit_card: str
+
+class PaymentResponse(BaseModel):
+    """
+    Schema for Payment Delivery.
+    """
+    transaction_id: str
+    message: str
