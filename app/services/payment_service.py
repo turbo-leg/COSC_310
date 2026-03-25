@@ -12,7 +12,7 @@ def process_payment(order_id: int, credit_card: str) -> str:
     if len(credit_card) != 16 or not credit_card.isdigit():
         raise HTTPException(status_code=400, detail="Card is Invalid, must be 16 digits.")
 
-    order = database.orders_map.get(order_id)
+    order = database.get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail= "Order Not Found.")
 
