@@ -5,7 +5,7 @@ I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
 import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 from sqlalchemy.orm import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
@@ -17,7 +17,7 @@ NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
 
 
-def load_users_from_csv():
+def load_users_from_csv() -> None:
     """
     Todo: Load users from CSV into the in-memory map
     """
@@ -33,25 +33,25 @@ def save_users_to_csv():
         for user in users_map.values():
             writer.writerow(user)
 
-def init_storage():
+def init_storage() -> None:
     """
     Todo: Initialize storage by loading users from CSV
     """
     load_menu_items_from_csv()
 
-def get_all_users(skip: int = 0, limit: int = 100):
+def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
     """
     Todo: Return a list of users
     """
     return list(users_map.values())[skip : skip + limit]
 
-def get_user_by_id(user_id: int):
+def get_user_by_id(user_id: int) -> Optional[dict]:
     """
     Quickly finds a user with their id number.
     """
     return users_map.get(user_id)
 
-def get_user_by_email(email: str):
+def get_user_by_email(email: str) -> Optional[dict]:
     """
     Lookup user by email
     """
@@ -60,7 +60,7 @@ def get_user_by_email(email: str):
             return user
     return None
 
-def create_user(name: str, email: str, password:str, role:str):
+def create_user(name: str, email: str, password:str, role:str) -> dict:
     """
     Creates a new user and add it to the csv file using save_users_to_csv
     """
@@ -77,14 +77,14 @@ def create_user(name: str, email: str, password:str, role:str):
     save_users_to_csv()
     return new_user
 
-def delete_user(user_id: int):
+def delete_user(user_id: int) -> bool:
     """
     Todo: Delete a user by ID
     """
     _ = user_id
 
 
-def load_menu_items_from_csv():
+def load_menu_items_from_csv() -> None:
     """
     This loads menu items from the local CSV file into memory at startup
     """
@@ -116,14 +116,14 @@ def load_menu_items_from_csv():
         pass
 
 
-def get_all_menu_items():
+def get_all_menu_items() -> List[dict]:
     """
     Returns all menu items in memory.
     """
     return menu_items
 
 
-def get_menu_item_by_id(item_id: int):
+def get_menu_item_by_id(item_id: int) -> Optional[dict]:
     """
     Returns one menu item by item id.
     """
@@ -133,7 +133,7 @@ def get_menu_item_by_id(item_id: int):
     return None
 
 
-def restaurant_exists(restaurant_id: int):
+def restaurant_exists(restaurant_id: int) -> bool:
     """
     Returns True when at least one menu item belongs to the restaurant.
     """
@@ -143,7 +143,7 @@ def restaurant_exists(restaurant_id: int):
     return False
 
 
-def get_active_menu_for_restaurant(restaurant_id: int):
+def get_active_menu_for_restaurant(restaurant_id: int) -> List[dict]:
     """
     Returns active menu items for one restaurant.
     """
@@ -152,7 +152,7 @@ def get_active_menu_for_restaurant(restaurant_id: int):
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
 
-def find_restaurants_by_food_item(food_name: str):
+def find_restaurants_by_food_item(food_name: str) -> Dict[int, List[dict]]:
     """
     Returns restaurants with the inputted food name. Only menu items with the food name are returned
     """
@@ -168,7 +168,7 @@ def find_restaurants_by_food_item(food_name: str):
                 results[restaurant_id] = []
             results[restaurant_id].append(item)
     return results
-def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20):
+def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.
     """
@@ -200,13 +200,13 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
     NEXT_ORDER_ID += 1
     return new_order
 
-def get_order_by_id(order_id: int):
+def get_order_by_id(order_id: int) -> Optional[dict]:
     """
     Returns an order by its ID.
     """
     return orders_map.get(order_id)
 
-def update_order_status(order_id: int, new_status: str):
+def update_order_status(order_id: int, new_status: str) -> Optional[dict]:
     """
     Updates the status of an existing order.
     """
@@ -240,7 +240,7 @@ def update_order_status(order_id: int, new_status: str):
     order["customerNotified"] = True
     return order
 
-def get_incoming_orders_for_restaurant(restaurant_id: int):
+def get_incoming_orders_for_restaurant(restaurant_id: int) -> List[dict]:
     """
     Returns incoming orders for a specific restaurant.
     """
@@ -249,13 +249,13 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
         if order["restaurantId"] == restaurant_id
     ]
 
-def get_all_orders():
+def get_all_orders() -> List[dict]:
     """
     Returns all orders in memory.
     """
     return list(orders_map.values())
 
-def create_menu_item(restaurant_id: int, name: str, description: str, price: float):
+def create_menu_item(restaurant_id: int, name: str, description: str, price: float) -> dict:
     """
     Creates a new menu item for the given restaurant.
     """
@@ -271,7 +271,7 @@ def create_menu_item(restaurant_id: int, name: str, description: str, price: flo
     menu_items.append(new_item)
     return new_item
 
-def update_menu_item(item_id: int, restaurant_id: int, updates: dict):
+def update_menu_item(item_id: int, restaurant_id: int, updates: dict) -> Optional[dict]:
     """
     Updates an existing menu item.
     """
@@ -283,7 +283,7 @@ def update_menu_item(item_id: int, restaurant_id: int, updates: dict):
             return item
     return None
 
-def delete_menu_item(item_id: int, restaurant_id: int):
+def delete_menu_item(item_id: int, restaurant_id: int) -> bool:
     """
     Deletes an existing menu item.
     """
@@ -293,7 +293,7 @@ def delete_menu_item(item_id: int, restaurant_id: int):
             return True
     return False
 
-def update_payment_status(order_id: int, new_status: str):
+def update_payment_status(order_id: int, new_status: str) -> Optional[dict]:
     """
     Updates payment status of an order.
     """
@@ -305,7 +305,7 @@ def update_payment_status(order_id: int, new_status: str):
     order["payment_status"] = new_status
     return order
 
-def assign_delivery_to_order(order_id: int, delivery_id: int):
+def assign_delivery_to_order(order_id: int, delivery_id: int) -> Optional[dict]:
     """
     Assigns a delivery driver to an order.
     """
@@ -318,7 +318,7 @@ def assign_delivery_to_order(order_id: int, delivery_id: int):
     order["status"] = "assigned"
 
     return order
-def cancel_order_in_database(order_id: int) -> dict:
+def cancel_order_in_database(order_id: int) -> Optional[dict]:
     """
     Marks an order as status = `cancelled` in db.
     """
@@ -327,7 +327,7 @@ def cancel_order_in_database(order_id: int) -> dict:
         return orders_map[order_id]
     return None
 
-def modify_order_in_database(order_id: int, modify_data: dict) -> dict:
+def modify_order_in_database(order_id: int, modify_data: dict) -> Optional[dict]:
     """
     Modify specific values in the order.
     """
