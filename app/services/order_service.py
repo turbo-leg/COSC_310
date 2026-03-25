@@ -40,7 +40,7 @@ class OrderService:
     """
     Handles order retrieval logic, like fetching orders for a restaurant.
     """
-    
+
     def get_orders_by_restaurant(self, restaurant_id: int):
         """
         Returns all incoming orders for a given restaurant.
@@ -79,7 +79,7 @@ class OrderService:
 
         return _build_tracking_response(order)
 
-    def track_order_for_restaurant(order_id: int, restaurant_id: int) -> dict:
+    def track_order_for_restaurant(self, order_id: int, restaurant_id: int) -> dict:
         """
         Returns tracking info for an order, but only if it belongs
         to the given restaurant.
