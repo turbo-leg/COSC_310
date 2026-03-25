@@ -5,12 +5,18 @@ import uuid
 from fastapi import HTTPException
 from app import database
 
+def _validate_credit_card(credit_card: str) -> None:
+    """
+    Logic for checking if credit card is valid.
+    """
+    if len(credit_card) != 16 or not credit_card.isdigit():
+        raise HTTPException(status_code=400, detail="Card is Invalid, must be 16 digits.")
+
 def process_payment(order_id: int, credit_card: str) -> str:
     """
     Handles payment verification.
     """
-    if len(credit_card) != 16 or not credit_card.isdigit():
-        raise HTTPException(status_code=400, detail="Card is Invalid, must be 16 digits.")
+    _validate_credit_card(credit_card)
 
     order = database.orders_map.get(order_id)
     if not order:
