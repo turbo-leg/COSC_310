@@ -83,37 +83,57 @@ def delete_user(user_id: int) -> bool:
     """
     _ = user_id
 
+def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
+    """
+    Reads Menu csv file and returns raw rows.
+    """
+    try:
+        with open(file=file_path, mode='r', newline= '', encoding= 'utf-8')as file:
+            return list(csv.DictReader(file))
+    except FileNotFoundError:
+        return []
+
+def process_rows(rows: List[Dict[str, str]]) -> List[Dict]:
+    """
+    Processes raw CSV rows into structured menu items (deduplicated).
+    """
+    processed_items: List[dict] = []
+    seen_items = set()
+    item_counter = 1
+
+    for row in rows:
+        restaurant_id = int(row.get("restaurant_id", 0))
+        food_name = row.get("food_item", "Unknown Item")
+
+        unique_identifier = f"{restaurant_id}_{food_name}"
+
+        if unique_identifier in seen_items:
+            continue
+
+        seen_items.add(unique_identifier)
+
+        price = float(row.get("order_value", 10.0))
+
+        processed_items.append({
+            "itemId": item_counter,
+            "restaurantId": restaurant_id,
+            "name": food_name,
+            "description": f"Delicious {food_name}",
+            "price": price,
+            "isActive": True
+        })
+
+        item_counter += 1
+
+    return processed_items
 
 def load_menu_items_from_csv() -> None:
     """
     This loads menu items from the local CSV file into memory at startup
     """
     global menu_items # pylint: disable=global-statement
-    menu_items = []
-    csv_file_path = MENU_CSV_FILE_PATH
-
-    try:
-        seen_items = set()
-        item_counter = 1
-        with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
-            for row in csv.DictReader(file):
-                restaurant_id = int(row.get("restaurant_id", 0))
-                food_name = row.get("food_item", "Unknown Item")
-                unique_identifier = f"{restaurant_id}_{food_name}"
-                if unique_identifier not in seen_items:
-                    seen_items.add(unique_identifier)
-                    price = float(row.get("order_value", 10.0))
-                    menu_items.append({
-                        "itemId": item_counter,
-                        "restaurantId": restaurant_id,
-                        "name": food_name,
-                        "description": f"Delicious {food_name}",
-                        "price": price,
-                        "isActive": True
-                    })
-                    item_counter += 1
-    except FileNotFoundError:
-        pass
+    rows = read_menu_csv(MENU_CSV_FILE_PATH)
+    menu_items = process_rows(rows)
 
 
 def get_all_menu_items() -> List[dict]:
