@@ -1,6 +1,7 @@
 """
 Testing for secure payment processing.
 """
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from app.main import app
 from app import database
@@ -57,3 +58,25 @@ def test_prevent_double_charge():
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Order Already Paid."
+
+
+@patch("app.services.payment_service.uuid.uuid4")
+def test_mock_uuid_receipt(mock_uuid):
+    """
+    Tests that generation of receipts is predictable.
+    """
+    mock_uuid.return_value.hex = "1234567890abcdef"
+    database.orders_map = {
+        1:{
+            "orderId": 1,
+            "payment_status": "pending"
+        }
+    }
+
+    response = client.post("/payments/process", json={
+        "order_id": 1,
+        "credit_card": "1234567812345678"
+    })
+
+    assert response.status_code == 200
+    assert response.json()["transaction_id"] == "RCPT_1234567890abcdef"
