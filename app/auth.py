@@ -19,4 +19,3 @@ def get_user(authorization: str = Header(None)):
         raise HTTPException(status_code=401)
 
     return user
-
