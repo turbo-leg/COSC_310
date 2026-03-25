@@ -10,7 +10,8 @@ def create_token(user):
     Creates a JWT token with the user's email and role.
     """
     return jwt.encode(
-        {"email": user["email"], "role": user.get("role", "user")},
+        {"email": user["email"], "role": user.get("role", "user"),
+         "userId": user.get("userId")},
         SECRET,
         algorithm="HS256"
     )

@@ -10,7 +10,6 @@ from app.database import (
     create_menu_item,
     update_menu_item,
     delete_menu_item,
-    get_user_by_id
 )
 from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate
 
