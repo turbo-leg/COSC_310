@@ -135,7 +135,10 @@ def calculate_total_cost_of_order(item_ids: List[int], distance_km: float,
     Calculates the total cost of the order (total food price + delivery fee).
     """
     food_total = 0.0
-
+    if distance_km < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Distance cannot be negative")
     for item_id in item_ids:
         item = database.get_menu_item_by_id(item_id)
         if item:
