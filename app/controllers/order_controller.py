@@ -6,7 +6,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app import schemas, database
+from app import schemas
 
 
 from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
@@ -86,7 +86,7 @@ def get_restaurant_revenue(restaurant_id: int, user_id: int):
     Returns total revenue of restaurant. Only viewed by owner.
     """
     require_restaurant_owner(user_id, restaurant_id)
-    
+
     revenue = order_service.get_restaurant_revenue(restaurant_id)
     return{
         "restaurant_id": restaurant_id,

@@ -2,10 +2,9 @@
 Controller for admin-specific endpoints.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from app.auth_helpers import require_admin
 from app.services.admin_service import admin_service
-from app.services.auth_service import auth_service
 from app.schemas import AdminStatsResponse
 
 router = APIRouter(prefix="/admin", tags=["admin"])

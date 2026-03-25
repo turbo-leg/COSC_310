@@ -102,3 +102,4 @@ def test_require_restaurant_owner_wrong_restaurant():
 
     assert exc.value.status_code == 403
     assert exc.value.detail == "Only the restaurant owner can access these endpoints"
+    

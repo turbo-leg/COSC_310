@@ -7,7 +7,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service
-from app.auth import get_user, require_admin
+from app.auth import get_user
 
 
 router = APIRouter(prefix="/users", tags=["users"])
