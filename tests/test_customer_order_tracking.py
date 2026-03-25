@@ -34,6 +34,9 @@ def test_create_order_adds_tracking_fields():
     assert "estimatedDeliveryMinutes" in order
     assert "estimatedArrivalTime" in order
     assert order["estimatedDeliveryMinutes"] == 40  # 15 + 5 + 20
+    assert not order["notifications"]
+    assert order["latestNotification"] is None
+    assert order["customerNotified"] is False
 
 def test_get_order_by_id_returns_correct_order():
     """
@@ -132,3 +135,58 @@ def test_track_order_clamps_remaining_time_at_zero():
 def test_track_order_returns_none_for_missing_order():
     """Tracking a missing order should return None."""
     assert order_service.track_order(999) is None
+
+def test_status_change_notifies_customer():
+    """Customer should be notified when order status changes."""
+    created = database.create_order(
+        user_id=123,
+        restaurant_id=45,
+        items=[1, 2],
+        time_minutes=15
+    )
+
+    updated = database.update_order_status(created["orderId"], "preparing")
+
+    assert updated is not None
+    assert updated["status"] == "preparing"
+    assert len(updated["notifications"]) == 1
+    assert updated["customerNotified"] is True
+    assert updated["latestNotification"] is not None
+    assert updated["latestNotification"]["oldStatus"] == "pending"
+    assert updated["latestNotification"]["newStatus"] == "preparing"
+
+def test_multiple_status_changes_still_notify_customer():
+    """Customer should still be notified across multiple real status changes."""
+    created = database.create_order(
+        user_id=101,
+        restaurant_id=12,
+        items=[1],
+        time_minutes=10
+    )
+
+    first = database.update_order_status(created["orderId"], "preparing")
+    second = database.update_order_status(created["orderId"], "out-for-delivery")
+
+    assert first["customerNotified"] is True
+    assert second["customerNotified"] is True
+    assert len(second["notifications"]) == 2
+    assert second["notifications"][0]["newStatus"] == "preparing"
+    assert second["notifications"][1]["newStatus"] == "out-for-delivery"
+
+def test_status_change_to_same_status_does_not_notify_customer():
+    """Customer should not be notified if status is updated to the same value."""
+    created = database.create_order(
+        user_id=202,
+        restaurant_id=34,
+        items=[1, 2, 3],
+        time_minutes=25
+    )
+
+    database.update_order_status(created["orderId"], "preparing")
+    updated = database.update_order_status(created["orderId"], "preparing")
+
+    assert updated is not None
+    assert updated["status"] == "preparing"
+    assert len(updated["notifications"]) == 1
+    assert updated["customerNotified"] is False
+    assert updated["latestNotification"] is None

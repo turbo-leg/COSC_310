@@ -6,6 +6,7 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from app import schemas, database
 
 
 from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
@@ -74,6 +75,43 @@ def update_payment_status(order_id: int, request: PaymentUpdateRequest):
         return {"error": "Order not found"}
 
     return {
-        "message": f"Payment {request.status}",
+        "message": f"Payment succesful. Status: {request.status}",
         "order": updated_order
     }
+
+@router.get("/restaurants/{restaurant_id}/revenue")
+def get_restaurant_revenue(restaurant_id: int, user_id: int):
+    """
+    Returns total revenue of restaurant. Only viewed by owner.
+    """
+    user = database.get_user_by_id(user_id)
+    if not user or user.get("role") != "restaurant" or user.get("userId") != restaurant_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Blocked: Only the restaurant owner can view revenue."
+        )
+    revenue = order_service.get_restaurant_revenue(restaurant_id)
+    return{
+        "restaurant_id": restaurant_id,
+        "total_revenue": revenue
+    }
+
+@router.put("/{order_id}/cancel", response_model=schemas.OrderResponse)
+def cancel_order_endpoint(order_id: int):
+    """
+    Cancels order if preparation hasn't started yet.
+    """
+    return order_service.cancel_order(order_id)
+
+@router.put("/{order_id}/modify", response_model=schemas.OrderResponse)
+def modify_order_endpoint(order_id: int, modify_request: schemas.OrderModifyRequest):
+    """
+    Modify an order's details/items before preparation starts.
+    """
+    return order_service.modify_order(order_id, modify_request)
+@router.get("/restaurants/{restaurant_id}/track-delivery", response_model=List[TrackOrderResponse])
+def track_delivery_for_restaurant(restaurant_id: int):
+    """
+    Returns delivery tracking info for all orders of a restaurant.
+    """
+    return order_service.track_order_for_restaurant(restaurant_id)

@@ -3,6 +3,7 @@ this file defines Pydantic schemas for request/response validation
 schemas ensure API data is correctly typed and structured
 they separate API contracts from database models for flexibility
 """
+from typing import List
 from pydantic import BaseModel, EmailStr, Field
 
 
@@ -49,6 +50,7 @@ class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
     order_time: str
     order_value: float
     customer_id: int
+    status: str
 
     class Config: # pylint: disable=too-few-public-methods
         """
@@ -111,3 +113,19 @@ class UpdateOrderStatusRequest(BaseModel):
     Schema for updating order status.
     """
     new_status: str
+
+class AdminStatsResponse(BaseModel):
+    """
+    Schema for Admin stats response.
+    """
+    total_users: int
+    total_orders: int
+    total_revenue: float
+    total_menu_items: int
+class OrderModifyRequest(BaseModel):
+    """
+    Schema for modifying orders.
+    """
+    food_item : str | None = None
+    order_value : float | None = None
+    items : List[int] | None = None

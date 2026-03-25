@@ -5,7 +5,10 @@ and creates the FastAPI app instance that Uvicorn runs
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.controllers import user_controller, menu_controller, delivery_controller, order_controller
+from app.controllers import (
+    user_controller, menu_controller, delivery_controller,
+    order_controller, admin_controller
+)
 from app import database
 
 @asynccontextmanager
@@ -15,6 +18,7 @@ async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
     """
     # Initialize in-memory storage from CSV at startup
     database.init_storage()
+    # Startup complete
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -23,6 +27,7 @@ app.include_router(user_controller.router)
 app.include_router(menu_controller.router)
 app.include_router(delivery_controller.router)
 app.include_router(order_controller.router)
+app.include_router(admin_controller.router)
 
 
 @app.get("/")

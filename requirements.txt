@@ -8,4 +8,3 @@ pytest==8.0.0
 httpx==0.26.0 #Simulate browser requests
 pydantic[email]
 pylint
-kagglehub

@@ -6,7 +6,6 @@ I am not sure where to find the csv file is so we might need to adjut the path.
 import csv
 import datetime
 from typing import Dict, List
-import kagglehub
 from sqlalchemy.orm import declarative_base
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
@@ -44,8 +43,7 @@ def get_all_users(skip: int = 0, limit: int = 100):
     """
     Todo: Return a list of users
     """
-    _ = skip
-    _= limit
+    return list(users_map.values())[skip : skip + limit]
 
 def get_user_by_id(user_id: int):
     """
@@ -86,27 +84,13 @@ def delete_user(user_id: int):
     _ = user_id
 
 
-def download_dataset():
-    """
-    Downloads the Kaggle dataset and returns the local path
-    """
-    try:
-        path = kagglehub.dataset_download("niszarkiah/food-delivery")
-        return path
-    except Exception as e: # pylint: disable=broad-exception-caught
-        print(f"Error downloading dataset: {e}")
-        return None
-
 def load_menu_items_from_csv():
     """
-    This loads menu items from the Kaggle dataset into memory at startup
+    This loads menu items from the local CSV file into memory at startup
     """
     global menu_items # pylint: disable=global-statement
     menu_items = []
-    dataset_path = download_dataset()
-    if not dataset_path:
-        return
-    csv_file_path = f"{dataset_path}/food_delivery.csv"
+    csv_file_path = MENU_CSV_FILE_PATH
 
     try:
         seen_items = set()
@@ -206,7 +190,10 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending"
+        "payment_status": "pending",
+        "notifications": [],
+        "latestNotification": None,
+        "customerNotified": False
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
@@ -224,10 +211,34 @@ def update_order_status(order_id: int, new_status: str):
     Updates the status of an existing order.
     """
     order = orders_map.get(order_id)
-    if order:
-        order["status"] = new_status
+    if not order:
+        return None
+
+    old_status = order["status"]
+
+    # Do not notify customer if the status does not change
+    if old_status == new_status:
+        order["customerNotified"] = False
+        order["latestNotification"] = None
         return order
-    return None
+
+    order["status"] = new_status
+
+    notification = {
+        "orderId": order["orderId"],
+        "userId": order["userId"],
+        "oldStatus": old_status,
+        "newStatus": new_status,
+        "message": (
+            f"Your order #{order['orderId']} status has changed from "
+            f"{old_status} to {new_status}."
+        ),
+        "sentAt": datetime.datetime.now().isoformat()
+    }
+    order["notifications"].append(notification)
+    order["latestNotification"] = notification
+    order["customerNotified"] = True
+    return order
 
 def get_incoming_orders_for_restaurant(restaurant_id: int):
     """
@@ -237,7 +248,6 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
         order for order in orders_map.values()
         if order["restaurantId"] == restaurant_id
     ]
-
 
 def get_all_orders():
     """
@@ -308,3 +318,32 @@ def assign_delivery_to_order(order_id: int, delivery_id: int):
     order["status"] = "assigned"
 
     return order
+def cancel_order_in_database(order_id: int) -> dict:
+    """
+    Marks an order as status = `cancelled` in db.
+    """
+    if order_id in orders_map:
+        orders_map[order_id]["status"] = "cancelled"
+        return orders_map[order_id]
+    return None
+
+def modify_order_in_database(order_id: int, modify_data: dict) -> dict:
+    """
+    Modify specific values in the order.
+    """
+    if order_id in orders_map:
+        for key, value in modify_data.items():
+            if value is not None:
+                orders_map[order_id][key] = value
+        return orders_map[order_id]
+    return None
+
+def get_restaurant_revenue(restaurant_id: int) -> float:
+    """
+    Calculates total revenue from accepted payments for a restaurant.
+    """
+    total = 0.0
+    for order in orders_map.values():
+        if order.get("restaurantId") == restaurant_id and order.get("payment_status") == "accepted":
+            total += order.get("order_value", 0.0)
+    return total
