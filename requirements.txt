@@ -11,3 +11,4 @@ pylint
 kagglehub
 uuid
 pylint
+python-jose
