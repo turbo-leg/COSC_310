@@ -12,29 +12,12 @@ from app.database import (
     get_user_by_id
 )
 from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate
+from app.auth_helpers import require_restaurant_owner
 
 router = APIRouter(
     prefix="/restaurant",
     tags=["menu"],
 )
-
-def _verify_owner(user_id: int, restaurant_id: int):
-    """
-    Checks if user is owner of the restaurant.
-    """
-    if not user_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Only the restaurant owner can access these endpoints"
-        )
-
-    user = get_user_by_id(user_id)
-    if not user or user.get("role") != "restaurant" or \
-       user.get("userId") != restaurant_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Only the restaurant owner can access these endpoints"
-        )
 
 @router.get("/{restaurant_id}/menu", response_model=List[MenuItemResponse])
 def get_restaurant_menu(restaurant_id: int):
@@ -50,7 +33,7 @@ def add_menu_item(restaurant_id: int, item: MenuItemCreate, owner_id: int = None
     """
     Add a new menu item.
     """
-    _verify_owner(owner_id, restaurant_id)
+    require_restaurant_owner(owner_id, restaurant_id)
     new_item = create_menu_item(restaurant_id, item.name, item.description, item.price)
     return new_item
 
@@ -59,7 +42,7 @@ def edit_menu_item(restaurant_id: int, item_id: int, item: MenuItemUpdate, owner
     """
     Update a menu item.
     """
-    _verify_owner(owner_id, restaurant_id)
+    require_restaurant_owner(owner_id, restaurant_id)
     updated_item = update_menu_item(item_id, restaurant_id, item.model_dump(exclude_unset=True))
     if not updated_item:
         raise HTTPException(status_code=404, detail="Menu item not found")
@@ -70,7 +53,7 @@ def remove_menu_item(restaurant_id: int, item_id: int, owner_id: int = None):
     """
     Delete a menu item.
     """
-    _verify_owner(owner_id, restaurant_id)
+    require_restaurant_owner(owner_id, restaurant_id)
     success = delete_menu_item(item_id, restaurant_id)
     if not success:
         raise HTTPException(status_code=404, detail="Menu item not found")

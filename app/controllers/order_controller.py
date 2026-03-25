@@ -11,6 +11,7 @@ from app import schemas, database
 
 from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
 from app.services.order_service import order_service, calculate_total_cost_of_order
+from app.auth_helpers import require_restaurant_owner
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -84,12 +85,8 @@ def get_restaurant_revenue(restaurant_id: int, user_id: int):
     """
     Returns total revenue of restaurant. Only viewed by owner.
     """
-    user = database.get_user_by_id(user_id)
-    if not user or user.get("role") != "restaurant" or user.get("userId") != restaurant_id:
-        raise HTTPException(
-            status_code=403,
-            detail="Blocked: Only the restaurant owner can view revenue."
-        )
+    require_restaurant_owner(user_id, restaurant_id)
+    
     revenue = order_service.get_restaurant_revenue(restaurant_id)
     return{
         "restaurant_id": restaurant_id,
