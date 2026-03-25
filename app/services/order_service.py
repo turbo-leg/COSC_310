@@ -3,10 +3,38 @@ Handles order-related operations.
 """
 
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 from app import database, schemas
 from app.services.delivery_service import calculate_delivery_cost
+
+def _build_tracking_response(order: dict) -> dict:
+    """
+    Builds a consistent tracking response for an order.
+    """
+    created_at_str = order.get("createdAt")
+    estimated_delivery_minutes = order.get("estimatedDeliveryMinutes", 0)
+
+    if not created_at_str:
+        raise ValueError("Order is missing createdAt")
+
+    created_at = datetime.fromisoformat(created_at_str)
+    estimated_arrival = created_at + timedelta(minutes=estimated_delivery_minutes)
+    now = datetime.now()
+
+    minutes_remaining = max(
+        0,
+        int((estimated_arrival - now).total_seconds() // 60)
+    )
+
+    return {
+        "orderId": order.get("orderId"),
+        "status": order.get("status"),
+        "createdAt": created_at_str,
+        "estimatedDeliveryMinutes": estimated_delivery_minutes,
+        "estimatedArrivalTime": estimated_arrival.isoformat(),
+        "minutesRemaining": minutes_remaining,
+    }
 
 class OrderService:
     """
@@ -47,43 +75,17 @@ class OrderService:
         """
         order = database.get_order_by_id(order_id)
         if not order:
-            return None
+            raise HTTPException(status_code=404, detail="Order not found")
 
-        created_at = datetime.fromisoformat(order["createdAt"])
-        eta_minutes = order["estimatedDeliveryMinutes"]
-        estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+        return _build_tracking_response(order)
 
-        elapsed_time = (datetime.now() - created_at).total_seconds() // 60
-        minutes_remaining = max(0, eta_minutes - elapsed_time)
-
-        return {
-            "orderId": order["orderId"],
-            "status": order["status"],
-            "estimatedArrivalTime": estimated_arrival.isoformat(),
-            "minutesRemaining": minutes_remaining
-        }
-
-    def track_order_for_restaurant(self, restaurant_id: int):
+    def track_order_for_restaurant(self, restaurant_id: int) -> List[dict]:
         """
-        Returns delivery tracking info for all orders of a restaurant.
+        Returns tracking info for all orders belonging to a restaurant.
         """
         orders = database.get_incoming_orders_for_restaurant(restaurant_id)
-        tracking_info = []
-        for order in orders:
-            created_at = datetime.fromisoformat(order["createdAt"])
-            eta_minutes = order["estimatedDeliveryMinutes"]
-            estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+        return [_build_tracking_response(order) for order in orders]
 
-            elapsed_time = (datetime.now() - created_at).total_seconds() // 60
-            minutes_remaining = max(0, eta_minutes - elapsed_time)
-
-            tracking_info.append({
-                "orderId": order["orderId"],
-                "status": order["status"],
-                "estimatedArrivalTime": estimated_arrival.isoformat(),
-                "minutesRemaining": minutes_remaining
-            })
-        return tracking_info
 
     def update_order_status(self, order_id: int, new_status: str):
         """
