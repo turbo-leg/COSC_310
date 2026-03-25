@@ -2,7 +2,7 @@
 Authentication utilities.
 """
 
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Depends
 from app.token import decode_token
 
 def get_user(authorization: str = Header(None)):
@@ -26,4 +26,15 @@ def require_admin(user= None):
     """
     if not user or not user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+def require_restaurant(user=Depends(get_user)):
+    """"
+    Checks if the user is a restaurant owner.
+    """
+    if user.get("role") != "restaurant":
+        raise HTTPException(
+            status_code=403,
+            detail="Restaurant owner access required"
+        )
     return user
