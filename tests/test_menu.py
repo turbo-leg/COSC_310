@@ -8,6 +8,9 @@ from app.token import create_token
 
 client = TestClient(app)
 
+owner_token = None
+customer_token = None
+
 def setup_module(module): # pylint: disable=unused-argument
     """
     Setup dummy data for testing.
@@ -32,7 +35,6 @@ def setup_module(module): # pylint: disable=unused-argument
             "isActive": True
         }
     ]
-    
     global owner_token, customer_token
     owner_token = create_token(database.users_map[100])
     customer_token = create_token(database.users_map[102])

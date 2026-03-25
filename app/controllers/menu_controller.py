@@ -3,7 +3,7 @@ This file defines endpoints for menu-related logic.
 """
 from typing import List
 from fastapi import APIRouter, HTTPException, Depends
-from app.auth import get_user, require_restaurant
+from app.auth import require_restaurant
 from app.database import (
     restaurant_exists,
     get_active_menu_for_restaurant,
@@ -44,7 +44,8 @@ def add_menu_item(restaurant_id: int, item: MenuItemCreate, user=Depends(require
     return create_menu_item(restaurant_id, item.name, item.description, item.price)
 
 @router.put("/{restaurant_id}/menu/{item_id}", response_model=MenuItemResponse)
-def edit_menu_item(restaurant_id: int, item_id: int, item: MenuItemUpdate, user=Depends(require_restaurant)):
+def edit_menu_item(restaurant_id: int, item_id: int, item: MenuItemUpdate,
+                   user=Depends(require_restaurant)):
     """
     Update a menu item.
     """
