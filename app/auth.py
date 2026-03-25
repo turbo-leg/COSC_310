@@ -20,4 +20,3 @@ def get_user(authorization: str = Header(None)):
 
     return user
 
-

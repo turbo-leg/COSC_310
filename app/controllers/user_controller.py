@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service
 from app.auth import get_user
+from app.auth_helpers import require_admin
 
 
 router = APIRouter(prefix="/users", tags=["users"])
