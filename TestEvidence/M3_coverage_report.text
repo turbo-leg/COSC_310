@@ -1,0 +1,79 @@
+========================================================================== test session starts ===========================================================================
+platform win32 -- Python 3.12.3, pytest-8.0.0, pluggy-1.6.0
+rootdir: C:\Users\faila\Downloads\Sphinxes\COSC_310
+plugins: anyio-4.12.1, locust-2.43.3, cov-7.1.0
+collected 63 items                                                                                                                                                        
+
+tests\test_admin_stats.py ..                                                                                                                                        [  3%]
+tests\test_customer_order_tracking.py ...........                                                                                                                   [ 34%] 
+tests\test_delivery_cost.py ...                                                                                                                                     [ 39%] 
+tests\test_incoming_order.py ..                                                                                                                                     [ 42%] 
+tests\test_menu.py .......                                                                                                                                          [ 53%] 
+tests\test_menu_filter.py ....                                                                                                                                      [ 60%] 
+tests\test_modify_cancel.py .....                                                                                                                                   [ 68%] 
+tests\test_order_cost.py ..                                                                                                                                         [ 71%] 
+tests\test_payment_status.py ....                                                                                                                                   [ 77%] 
+tests\test_restaurant_payments.py .....                                                                                                                             [ 85%] 
+tests\test_restaurant_track_delivery.py ...                                                                                                                         [ 90%] 
+tests\test_secure_payments.py ...                                                                                                                                   [ 95%] 
+tests\test_update_order_status.py ...                                                                                                                               [100%] 
+
+============================================================================ warnings summary ============================================================================ 
+app\schemas.py:31
+  C:\Users\faila\Downloads\Sphinxes\COSC_310\app\schemas.py:31: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserResponse(UserBase): # pylint: disable=too-few-public-methods
+
+app\schemas.py:43
+  C:\Users\faila\Downloads\Sphinxes\COSC_310\app\schemas.py:43: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================================================================= tests coverage ============================================================================= 
+____________________________________________________________ coverage: platform win32, python 3.12.3-final-0 _____________________________________________________________ 
+
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+app\__init__.py                              0      0   100%
+app\auth.py                                 14      4    71%   19, 27-29
+app\controllers\__init__.py                  0      0   100%
+app\controllers\admin_controller.py         10      0   100%
+app\controllers\delivery_controller.py      16      4    75%   36-41
+app\controllers\menu_controller.py          35      2    94%   26, 76
+app\controllers\order_controller.py         54      5    91%   47-50, 75
+app\controllers\payment_controller.py        8      0   100%
+app\controllers\user_controller.py          38     10    74%   27, 34-37, 80-84
+app\database.py                            163     22    87%   40, 84, 92-116, 294, 328, 339
+app\main.py                                 18      3    83%   20-22, 39
+app\schemas.py                              68      0   100%
+app\services\__init__.py                     0      0   100%
+    class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================================================================= tests coverage ============================================================================= 
+____________________________________________________________ coverage: platform win32, python 3.12.3-final-0 _____________________________________________________________ 
+
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+app\__init__.py                              0      0   100%
+app\auth.py                                 14      4    71%   19, 27-29
+app\controllers\__init__.py                  0      0   100%
+app\controllers\admin_controller.py         10      0   100%
+app\controllers\delivery_controller.py      16      4    75%   36-41
+app\controllers\menu_controller.py          35      2    94%   26, 76
+app\controllers\order_controller.py         54      5    91%   47-50, 75
+app\controllers\payment_controller.py        8      0   100%
+app\controllers\user_controller.py          38     10    74%   27, 34-37, 80-84
+app\database.py                            163     22    87%   40, 84, 92-116, 294, 328, 339
+app\main.py                                 18      3    83%   20-22, 39
+app\schemas.py                              68      0   100%
+app\services\__init__.py                     0      0   100%
+app\services\admin_service.py               18      0   100%
+app\services\auth_service.py                30      7    77%   29, 38-41, 56-57
+app\services\delivery_service.py             9      0   100%
+app\services\order_service.py               67      1    99%   115
+app\services\payment_service.py             14      1    93%   17
+app\services\user_service.py                16      3    81%   17, 23, 53
+app\token.py                                 9      2    78%   25-26
+----------------------------------------------------------------------
+TOTAL                                      587     64    89%
+===================================================================== 63 passed, 2 warnings in 3.37s ===================================================================== 
