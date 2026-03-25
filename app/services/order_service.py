@@ -79,25 +79,12 @@ class OrderService:
 
         return _build_tracking_response(order)
 
-    def track_order_for_restaurant(self, order_id: int, restaurant_id: int) -> dict:
+    def track_order_for_restaurant(self, restaurant_id: int) -> List[dict]:
         """
-        Returns tracking info for an order, but only if it belongs
-        to the given restaurant.
+        Returns tracking info for all orders belonging to a restaurant.
         """
-        order = database.get_order_by_id(order_id)
-
-        if not order:
-            raise HTTPException(status_code=404, detail="Order not found")
-
-        order_restaurant_id = order.get("restaurantId", order.get("restaurant_id"))
-
-        if order_restaurant_id != restaurant_id:
-            raise HTTPException(
-                status_code=403,
-                detail="Unauthorized access to this order"
-            )
-
-        return _build_tracking_response(order)
+        orders = database.get_incoming_orders_for_restaurant(restaurant_id)
+        return [_build_tracking_response(order) for order in orders]
 
 
     def update_order_status(self, order_id: int, new_status: str):

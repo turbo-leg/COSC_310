@@ -37,4 +37,3 @@ def test_assign_delivery_invalid_order():
     result = assign_delivery(order_id=9999, delivery_id=123)
 
     assert result is None
-    
