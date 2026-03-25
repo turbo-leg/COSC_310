@@ -1,9 +1,11 @@
 """Tests for customer order tracking."""
 
 from datetime import datetime, timedelta
-import pytest
-from app import database
+
 from fastapi import HTTPException
+import pytest
+
+from app import database
 from app.services.order_service import order_service
 
 @pytest.fixture(autouse=True)
@@ -134,6 +136,7 @@ def test_track_order_clamps_remaining_time_at_zero():
     assert tracked["minutesRemaining"] == 0
 
 def test_track_order_raises_404_for_missing_order():
+    """Tracking a missing order should raise HTTP 404."""
     with pytest.raises(HTTPException) as exc_info:
         order_service.track_order(999)
 
