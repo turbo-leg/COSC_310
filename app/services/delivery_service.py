@@ -1,6 +1,8 @@
 """
 Handles delivery cost calculations.
 """
+from app import database
+
 def calculate_delivery_cost(distance_km: float, time_minutes: int) -> float:
     """
     Calculate delivery cost using distance and time.
@@ -15,3 +17,9 @@ def calculate_delivery_cost(distance_km: float, time_minutes: int) -> float:
     cost = base_fee + (distance_km * distance_rate) + (time_minutes * time_rate)
 
     return round(cost, 2)
+
+def assign_delivery(order_id: int, delivery_id: int):
+    """
+    Assign a delivery to an order.
+    """
+    return database.assign_delivery_to_order(order_id, delivery_id)
