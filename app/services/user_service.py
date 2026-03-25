@@ -37,7 +37,7 @@ def create_user(user: UserCreate):
         name = user.name,
         email = user.email,
         password= hashed_password,
-        role= "Regular User"
+        role= "customer"
     )
 
 def verify_user_login(email:str, password:str):
