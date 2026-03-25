@@ -92,7 +92,7 @@ def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
             return list(csv.DictReader(file))
     except FileNotFoundError:
         return []
-    
+
 def process_rows(rows: List[Dict[str, str]]) -> List[Dict]:
     """
     Processes raw CSV rows into structured menu items (deduplicated).
