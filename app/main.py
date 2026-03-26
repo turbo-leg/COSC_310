@@ -32,11 +32,14 @@ app.include_router(payment_controller.router)
 
 
 @app.get("/restaurants", response_model=list)
-def get_restaurants(skip: int = 0, limit: int = 100):
+def get_restaurants(skip: int = 0, limit: int = 100, query: str = None):
     """
-    Retrieves all restaurants.
+    Retrieves all restaurants, optionally filtered by name.
     """
-    return database.get_all_restaurants(skip=skip, limit=limit)
+    restaurants = database.get_all_restaurants(skip=skip, limit=limit)
+    if query:
+        restaurants = [r for r in restaurants if query.lower() in r.get("name", "").lower()]
+    return restaurants
 
 
 @app.get("/")
