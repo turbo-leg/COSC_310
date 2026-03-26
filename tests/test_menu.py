@@ -6,10 +6,11 @@ from app.main import app
 from app import database
 from app.token import create_token
 
+# pylint: disable=global-statement
 client = TestClient(app)
 
-owner_token = None
-customer_token = None
+OWNER_TOKEN = None
+CUSTOMER_TOKEN = None
 
 def setup_module(module): # pylint: disable=unused-argument
     """
@@ -35,9 +36,9 @@ def setup_module(module): # pylint: disable=unused-argument
             "isActive": True
         }
     ]
-    global owner_token, customer_token
-    owner_token = create_token(database.users_map[100])
-    customer_token = create_token(database.users_map[102])
+    global OWNER_TOKEN, CUSTOMER_TOKEN
+    OWNER_TOKEN = create_token(database.users_map[100])
+    CUSTOMER_TOKEN = create_token(database.users_map[102])
 
 def teardown_module(module): # pylint: disable=unused-argument
     """
@@ -75,7 +76,7 @@ def test_add_menu_item_success():
         "price": 4.5
     }
     response = client.post("/restaurant/100/menu", json=payload,
-                           headers={"Authorization": f"Bearer {owner_token}"})
+                           headers={"Authorization": f"Bearer {OWNER_TOKEN}"})
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Fries"
@@ -88,7 +89,7 @@ def test_add_menu_item_unauthorized():
     """
     payload = {"name": "Fries", "description": "Mcdonalds", "price": 4.5}
     response = client.post("/restaurant/100/menu", json=payload,
-                           headers={"Authorization": f"Bearer {customer_token}"})
+                           headers={"Authorization": f"Bearer {CUSTOMER_TOKEN}"})
     assert response.status_code == 403
 
 def test_edit_menu_item_success():
@@ -97,7 +98,7 @@ def test_edit_menu_item_success():
     """
     payload = {"price": 12.0}
     response = client.put("/restaurant/100/menu/1", json=payload,
-                          headers={"Authorization": f"Bearer {owner_token}"})
+                          headers={"Authorization": f"Bearer {OWNER_TOKEN}"})
     assert response.status_code == 200
     data = response.json()
     assert data["price"] == 12.0
@@ -107,7 +108,7 @@ def test_edit_menu_item_not_found():
     Test editing a non-existent item.
     """
     response = client.put("/restaurant/100/menu/99", json={"price": 12.0},
-                          headers={"Authorization": f"Bearer {owner_token}"})
+                          headers={"Authorization": f"Bearer {OWNER_TOKEN}"})
     assert response.status_code == 404
 
 def test_remove_menu_item_success():
@@ -115,7 +116,7 @@ def test_remove_menu_item_success():
     Test removing an item.
     """
     response = client.delete("/restaurant/100/menu/1",
-                             headers={"Authorization": f"Bearer {owner_token}"})
+                             headers={"Authorization": f"Bearer {OWNER_TOKEN}"})
     assert response.status_code == 200
     resp = client.get("/restaurant/100/menu")
     assert resp.status_code in [200, 404]
