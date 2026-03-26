@@ -232,12 +232,18 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
     estimated_delivery_minutes = 15 + 5 + time_minutes
     estimated_arrival_time = created_at + datetime.timedelta(
         minutes=estimated_delivery_minutes)
+    total_value = 0.0
+    for item_id in items:
+        item = get_menu_item_by_id(item_id)
+        if item:
+            total_value += item.get("price", 0.0)
 
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
+        "order_value": total_value,
         "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,

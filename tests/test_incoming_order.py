@@ -58,8 +58,8 @@ def test_view_incoming_orders_success():
     data = response.json()
 
     assert len(data) == 2
-    assert data[0]["restaurant_id"] == 100
-    assert data[1]["restaurant_id"] == 100
+    assert data[0]["restaurantId"] == 100
+    assert data[1]["restaurantId"] == 100
 
 
 def test_view_incoming_orders_empty():
