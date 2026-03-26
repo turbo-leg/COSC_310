@@ -9,7 +9,8 @@ from app.database import (
     create_menu_item,
     update_menu_item,
     delete_menu_item,
-    get_user_by_id
+    get_user_by_id,
+    find_restaurants_by_food_item
 )
 from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate
 
@@ -36,14 +37,21 @@ def _verify_owner(user_id: int, restaurant_id: int):
             detail="Only the restaurant owner can access these endpoints"
         )
 
+@router.get("/search", response_model=List[MenuItemResponse])
+def search_food_items(query: str, skip: int = 0, limit: int = 100):
+    """
+    Search for food items across all restaurants.
+    """
+    return find_restaurants_by_food_item(query, skip=skip, limit=limit)
+
 @router.get("/{restaurant_id}/menu", response_model=List[MenuItemResponse])
-def get_restaurant_menu(restaurant_id: int):
+def get_restaurant_menu(restaurant_id: int, skip: int = 0, limit: int = 100):
     """
     Get active menu items for a specific restaurant.
     """
     if not restaurant_exists(restaurant_id):
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    return get_active_menu_for_restaurant(restaurant_id)
+    return get_active_menu_for_restaurant(restaurant_id, skip=skip, limit=limit)
 
 @router.post("/{restaurant_id}/menu", response_model=MenuItemResponse)
 def add_menu_item(restaurant_id: int, item: MenuItemCreate, owner_id: int = None):
