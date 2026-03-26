@@ -101,10 +101,13 @@ def create_user(name: str, email: str, password:str, role:str) -> dict:
     return new_user
 
 def delete_user(user_id: int) -> bool:
-    """
-    Todo: Delete a user by ID
-    """
-    _ = user_id
+    """Delete a user by ID and persist the updated data."""
+    if user_id not in users_map:
+        return False
+
+    del users_map[user_id]
+    save_users_to_csv()
+    return True
 
 def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
     """
