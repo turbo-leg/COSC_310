@@ -12,7 +12,8 @@ from app.database import (
     delete_menu_item,
     get_user_by_id,
     find_restaurants_by_food_item,
-    get_all_restaurants
+    get_all_restaurants,
+    search_restaurants_by_name
 )
 from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate, UserResponse
 
@@ -42,10 +43,12 @@ def _verify_owner(user_id: int, restaurant_id: int):
             detail="Only the restaurant owner can access these endpoints"
         )
 @router.get("s", response_model=List[UserResponse])
-def get_restaurants(skip: int = 0, limit: int = 100):
+def get_restaurants(query: str = None, skip: int = 0, limit: int = 100):
     """
-    Get all restaurants.
+    Get all restaurants. Optionally filter by name.
     """
+    if query:
+        return search_restaurants_by_name(query, skip=skip, limit=limit)
     return get_all_restaurants(skip=skip, limit=limit)
 
 @router.get("/search", response_model=List[MenuItemResponse])

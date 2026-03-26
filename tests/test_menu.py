@@ -107,3 +107,30 @@ def test_remove_menu_item_success():
     assert response.status_code == 200
     resp = client.get("/restaurant/100/menu")
     assert resp.status_code in [200, 404]
+
+def test_get_restaurants_with_search():
+    """ Test searching for a restaurant by name. """
+    database.users_map = {
+        100: {"userId": 100, "name": "Pizza", "role": "restaurant",
+             "email": "pizza@gmail.com", "password": "password123"},
+        101: {"userId": 101, "name": "Burger", "role": "restaurant",
+             "email": "burger@gmail.com", "password": "password123"},
+    }
+    response = client.get("/restaurants?query=pizza")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Pizza"
+
+def test_get_restaurants_without_search():
+    """ Test getting all restaurants. """
+    database.users_map = {
+        100: {"userId": 100, "name": "Pizza", "role": "restaurant",
+             "email": "pizza@gmail.com", "password": "password123"},
+        101: {"userId": 101, "name": "Burger", "role": "restaurant",
+             "email": "burger@gmail.com", "password": "password123"},
+    }
+    response = client.get("/restaurants")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
