@@ -163,31 +163,30 @@ def restaurant_exists(restaurant_id: int) -> bool:
     return False
 
 
-def get_active_menu_for_restaurant(restaurant_id: int) -> List[dict]:
+def get_active_menu_for_restaurant(restaurant_id: int, skip: int = 0, limit: int = 100
+) -> List[dict]:
     """
     Returns active menu items for one restaurant.
     """
-    return [
+    items = [
         item for item in menu_items
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
+    return items[skip : skip + limit]
 
-def find_restaurants_by_food_item(food_name: str) -> Dict[int, List[dict]]:
+def find_restaurants_by_food_item(food_name: str, skip: int = 0, limit: int = 100) -> List[dict]:
     """
-    Returns restaurants with the inputted food name. Only menu items with the food name are returned
+    Returns menu items with the inputted food name (paginated).
     """
     food = food_name.strip().lower()
-    results = {}
+    results = []
     for item in menu_items:
         if not item.get("isActive"):
             continue
         item_name = item.get("name", "").strip().lower()
         if food in item_name:
-            restaurant_id = item.get("restaurantId")
-            if restaurant_id not in results:
-                results[restaurant_id] = []
-            results[restaurant_id].append(item)
-    return results
+            results.append(item)
+    return results[skip : skip + limit]
 def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.
