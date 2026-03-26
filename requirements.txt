@@ -12,3 +12,4 @@ kagglehub
 uuid
 pylint
 python-jose
+locust
