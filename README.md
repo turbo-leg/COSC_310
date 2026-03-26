@@ -1,5 +1,17 @@
-# COSC_310
-Backend API for COSC_310
+# COSC_310 Project 
+
+#Overview
+This project currently contains the backend system for a food delivery app. The app has 8 core functionalities:
+- User Authentication
+- Menu Management
+- Search Functionality
+- Order Management
+- Delivery System
+- Order Tracking
+- Payment Processing
+- Notifications
+
+
 # Setup
 Clone the repo
 Run `docker-compose up --build -d`
@@ -18,6 +30,11 @@ CSV file
 ## Reminders
 I added a comment at the top of every file to explain what it does. Read it and let me know if you have any questions
 
+## Testing
+Testing is completed through `pytest `
+The CI pipeline uses both `pylint` and  `pytest`
+
 ## Notes
-The database.py functions are unimplemented
+Testing reports/evidence are found in `/testing-documents`
+Scrum documents are found 
 
