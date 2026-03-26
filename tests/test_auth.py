@@ -4,7 +4,7 @@ Testing for the authentication logic.
 from fastapi.testclient import TestClient
 from app import database
 from app.main import app
-from app.services.user_service import get_user
+from app.auth import get_user
 
 client = TestClient(app)
 

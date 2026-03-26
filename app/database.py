@@ -84,7 +84,7 @@ def delete_user(user_id: int) -> bool:
 
     del users_map[user_id]
     save_users_to_csv()
-    return True   
+    return True
 
 def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
     """
