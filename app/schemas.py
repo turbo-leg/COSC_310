@@ -6,6 +6,7 @@ they separate API contracts from database models for flexibility
 from typing import List
 from pydantic import BaseModel, EmailStr, Field
 from app.constants import UserRole, OrderStatus
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class AdminStatsResponse(BaseModel):
@@ -73,7 +74,7 @@ class OrderModifyRequest(BaseModel):
     items : List[int] | None = None
 
 
-class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
+class OrderResponse(BaseModel):
     """
     Schema for viewing incoming restaurant orders.
     """
@@ -85,11 +86,7 @@ class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
     customer_id: int
     status: str
 
-    class Config: # pylint: disable=too-few-public-methods
-        """
-        DocString
-        """
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentRequest(BaseModel):
@@ -125,7 +122,7 @@ class UpdateOrderStatusRequest(BaseModel):
     new_status: str
 
 
-class UserBase(BaseModel): # pylint: disable=too-few-public-methods
+class UserBase(BaseModel):
     """
     Base attributes for a user.
     """
@@ -133,7 +130,7 @@ class UserBase(BaseModel): # pylint: disable=too-few-public-methods
     email: EmailStr
 
 
-class UserCreate(UserBase): # pylint: disable=too-few-public-methods
+class UserCreate(UserBase):
     """
     Schema for user registration.
     """
@@ -141,7 +138,7 @@ class UserCreate(UserBase): # pylint: disable=too-few-public-methods
                           description= "Password must be at least 8 characters long")
 
 
-class UserLogin(BaseModel): # pylint: disable=too-few-public-methods
+class UserLogin(BaseModel):
     """
     Schema for user login credentials.
     """
@@ -149,7 +146,7 @@ class UserLogin(BaseModel): # pylint: disable=too-few-public-methods
     password: str
 
 
-class UserResponse(UserBase): # pylint: disable=too-few-public-methods
+class UserResponse(UserBase):
     """
     Schema for API user response.
     """
@@ -160,3 +157,6 @@ class UserResponse(UserBase): # pylint: disable=too-few-public-methods
         DocString
         """
         from_attributes = True
+    role: str
+
+    model_config = ConfigDict(from_attributes=True)
