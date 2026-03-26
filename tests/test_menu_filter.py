@@ -84,7 +84,6 @@ def test_find_menu_items_by_food_item_case_insensitive():
         {
             "itemId": 1, 
             "restaurantId": 1,
-            
             "name": "Pizza Margherita",
             "price": 10.0,
             "isActive": True},
