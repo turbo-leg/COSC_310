@@ -36,5 +36,5 @@ The CI pipeline uses both `pylint` and  `pytest`
 
 ## Notes
 Testing reports/evidence are found in `/testing-documents`
-Scrum documents are found 
+Scrum documents are found in `/scrum-documents`
 
