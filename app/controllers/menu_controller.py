@@ -3,6 +3,7 @@ This file defines endpoints for menu-related logic.
 """
 from typing import List
 from fastapi import APIRouter, HTTPException
+from app.constants import UserRole
 from app.database import (
     restaurant_exists,
     get_active_menu_for_restaurant,
@@ -31,8 +32,11 @@ def _verify_owner(user_id: int, restaurant_id: int):
         )
 
     user = get_user_by_id(user_id)
-    if not user or user.get("role") != "restaurant" or \
-       user.get("userId") != restaurant_id:
+    if (
+        not user
+        or user.get("role") != UserRole.RESTAURANT.value or
+        user.get("userId") != restaurant_id
+    ):
         raise HTTPException(
             status_code=403,
             detail="Only the restaurant owner can access these endpoints"

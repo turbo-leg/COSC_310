@@ -5,6 +5,7 @@ they separate API contracts from database models for flexibility
 """
 from typing import List
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from app.constants import UserRole, OrderStatus
 
 
 class AdminStatsResponse(BaseModel):
@@ -118,7 +119,7 @@ class TrackOrderResponse(BaseModel):
     Schema for tracking order status and ETA.
     """
     orderId: int
-    status: str
+    status: OrderStatus
     estimatedArrivalTime: str
     minutesRemaining: int
 
@@ -159,6 +160,6 @@ class UserResponse(UserBase):
     Schema for API user response.
     """
     userId: int
-    role: str
+    role: UserRole
 
     model_config = ConfigDict(from_attributes=True)

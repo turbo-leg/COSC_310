@@ -11,6 +11,7 @@ from app import schemas, database
 
 from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
 from app.services.order_service import order_service, calculate_total_cost_of_order
+from app.constants import UserRole
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 @router.post("/")
@@ -75,7 +76,7 @@ class PaymentUpdateRequest(BaseModel):
     """
     Schema for updating the payment status.
     """
-    status: str  # "accepted" or "rejected"
+    status: str
 
 @router.patch("/{order_id}/payment")
 def update_payment_status(order_id: int, request: PaymentUpdateRequest):
@@ -88,7 +89,7 @@ def update_payment_status(order_id: int, request: PaymentUpdateRequest):
         return {"error": "Order not found"}
 
     return {
-        "message": f"Payment succesful. Status: {request.status}",
+        "message": f"Payment succesful. Status: {request.status.lower()}",
         "order": updated_order
     }
 
@@ -98,7 +99,11 @@ def get_restaurant_revenue(restaurant_id: int, user_id: int):
     Returns total revenue of restaurant. Only viewed by owner.
     """
     user = database.get_user_by_id(user_id)
-    if not user or user.get("role") != "restaurant" or user.get("userId") != restaurant_id:
+    if (
+        not user
+        or user.get("role") != UserRole.RESTAURANT.value
+        or user.get("userId") != restaurant_id
+    ):
         raise HTTPException(
             status_code=403,
             detail="Blocked: Only the restaurant owner can view revenue."

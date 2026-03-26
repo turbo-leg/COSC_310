@@ -4,6 +4,7 @@ Payment service Logic
 import uuid
 from fastapi import HTTPException
 from app import database
+from app.constants import PaymentStatus
 
 def _validate_credit_card(credit_card: str) -> None:
     """
@@ -22,10 +23,10 @@ def process_payment(order_id: int, credit_card: str) -> str:
     if not order:
         raise HTTPException(status_code=404, detail= "Order Not Found.")
 
-    if order.get("payment_status") == "accepted":
+    if order.get("payment_status") == PaymentStatus.ACCEPTED.value:
         raise HTTPException(status_code=400, detail="Order Already Paid.")
 
-    database.update_payment_status(order_id, "accepted")
+    database.update_payment_status(order_id, PaymentStatus.ACCEPTED.value)
 
     unique_receipt = uuid.uuid4().hex[:16]
 

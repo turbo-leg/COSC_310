@@ -7,6 +7,7 @@ import csv
 import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import declarative_base
+from app.constants import OrderStatus, PaymentStatus
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
@@ -21,6 +22,27 @@ def load_users_from_csv() -> None:
     """
     Todo: Load users from CSV into the in-memory map
     """
+    global users_map, NEXT_ID  # pylint: disable=global-statement
+
+    users_map = {}
+
+    try:
+        with open(CSV_FILE_PATH, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                user_id = int(row["userId"])
+                row["userId"] = user_id
+                users_map[user_id] = row
+
+            if users_map:
+                NEXT_ID = max(users_map.keys()) + 1
+            else:
+                NEXT_ID = 1
+
+    except FileNotFoundError:
+        users_map = {}
+        NEXT_ID = 1
 
 def save_users_to_csv():
     """
@@ -37,6 +59,7 @@ def init_storage() -> None:
     """
     Todo: Initialize storage by loading users from CSV
     """
+    load_users_from_csv()
     load_menu_items_from_csv()
 
 def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
@@ -85,10 +108,13 @@ def create_user(name: str, email: str, password:str, role:str) -> dict:
     return new_user
 
 def delete_user(user_id: int) -> bool:
-    """
-    Todo: Delete a user by ID
-    """
-    _ = user_id
+    """Delete a user by ID and persist the updated data."""
+    if user_id not in users_map:
+        return False
+
+    del users_map[user_id]
+    save_users_to_csv()
+    return True
 
 def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
     """
@@ -212,11 +238,11 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
-        "status": "pending",
+        "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending",
+        "payment_status": PaymentStatus.UNPAID.value,
         "notifications": [],
         "latestNotification": None,
         "customerNotified": False
@@ -350,7 +376,7 @@ def assign_delivery_to_order(order_id: int, delivery_id: int) -> Optional[dict]:
         return None
 
     order["deliveryId"] = delivery_id
-    order["status"] = "assigned"
+    order["status"] = OrderStatus.ASSIGNED.value
 
     return order
 def cancel_order_in_database(order_id: int) -> Optional[dict]:
@@ -358,7 +384,7 @@ def cancel_order_in_database(order_id: int) -> Optional[dict]:
     Marks an order as status = `cancelled` in db.
     """
     if order_id in orders_map:
-        orders_map[order_id]["status"] = "cancelled"
+        orders_map[order_id]["status"] = OrderStatus.CANCELLED.value
         return orders_map[order_id]
     return None
 
@@ -379,6 +405,9 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
     """
     total = 0.0
     for order in orders_map.values():
-        if order.get("restaurantId") == restaurant_id and order.get("payment_status") == "accepted":
+        if (
+            order.get("restaurantId") == restaurant_id
+            and order.get("payment_status") == PaymentStatus.ACCEPTED.value
+        ):
             total += order.get("order_value", 0.0)
     return total
