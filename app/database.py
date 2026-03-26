@@ -21,6 +21,27 @@ def load_users_from_csv() -> None:
     """
     Todo: Load users from CSV into the in-memory map
     """
+    global users_map, NEXT_ID  # pylint: disable=global-statement
+
+    users_map = {}
+
+    try:
+        with open(CSV_FILE_PATH, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                user_id = int(row["userId"])
+                row["userId"] = user_id
+                users_map[user_id] = row
+
+            if users_map:
+                NEXT_ID = max(users_map.keys()) + 1
+            else:
+                NEXT_ID = 1
+
+    except FileNotFoundError:
+        users_map = {}
+        NEXT_ID = 1
 
 def save_users_to_csv():
     """
@@ -37,6 +58,7 @@ def init_storage() -> None:
     """
     Todo: Initialize storage by loading users from CSV
     """
+    load_users_from_csv()
     load_menu_items_from_csv()
 
 def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
