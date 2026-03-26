@@ -4,9 +4,8 @@ schemas ensure API data is correctly typed and structured
 they separate API contracts from database models for flexibility
 """
 from typing import List
-from pydantic import BaseModel, EmailStr, Field
-from app.constants import UserRole, OrderStatus
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from app.constants import UserRole, OrderStatus
 
 
 class AdminStatsResponse(BaseModel):
