@@ -103,7 +103,7 @@ class OrderService:
         if not order:
             raise HTTPException(status_code = 404, detail="Order Not Found")
 
-        allowed_statuses = [OrderStatus.PENDING.value, OrderStatus.ASSIGNED.value]
+        allowed_statuses = [OrderStatus.PENDING.value, OrderStatus.ACCEPTED.value]
 
         if order["status"] not in allowed_statuses:
             raise HTTPException(
