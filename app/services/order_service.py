@@ -40,12 +40,29 @@ class OrderService:
     """
     Handles order retrieval logic, like fetching orders for a restaurant.
     """
-
+    def place_order(self, request: schemas.OrderCreateRequest):
+        """
+        Places a new order in the system.
+        """
+        return database.create_order(
+            user_id=request.user_id,
+            restaurant_id=request.restaurant_id,
+            items=request.items,
+            time_minutes=request.time_minutes
+        )
+    
     def get_orders_by_restaurant(self, restaurant_id: int):
         """
         Returns all incoming orders for a given restaurant.
         """
         return database.get_incoming_orders_for_restaurant(restaurant_id)
+    
+    def get_orders_by_user(self, user_id: int):
+        """
+        Returns all orders placed by a specific user.
+        """
+        return database.get_orders_for_user(user_id)
+    
     def update_payment(self, order_id: int, status: str):
         """
         Updates payment status of an order.

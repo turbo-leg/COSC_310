@@ -9,10 +9,16 @@ from pydantic import BaseModel
 from app import schemas, database
 
 
-from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
+from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest, OrderCreateRequest
 from app.services.order_service import order_service, calculate_total_cost_of_order
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+@router.post("/")
+def place_order(order_request: schemas.OrderCreateRequest):
+    """
+    Endpoint to place a new order.
+    """
+    return order_service.place_order(order_request)
 
 @router.get("/restaurants/{restaurant_id}/orders", response_model=List[OrderResponse])
 def view_incoming_orders(restaurant_id: int):
@@ -20,6 +26,13 @@ def view_incoming_orders(restaurant_id: int):
     Retrieves all incoming orders for a specific restaurant.
     """
     return order_service.get_orders_by_restaurant(restaurant_id)
+
+@router.get("/users/{user_id}/orders", response_model=List[dict])
+def view_user_orders(user_id: int):
+    """
+    Retrieves all orders for a specific user.
+    """
+    return order_service.get_orders_by_user(user_id)
 
 class TotalOrderRequest(BaseModel):
     """
