@@ -81,7 +81,7 @@ class OrderCreateRequest(BaseModel):
     items: List[int]
     time_minutes: int = 20
     distance_km: float = 5.0
-    
+
 class OrderResponse(BaseModel):
     """
     Schema for viewing incoming restaurant orders.

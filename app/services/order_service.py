@@ -50,19 +50,19 @@ class OrderService:
             items=request.items,
             time_minutes=request.time_minutes
         )
-    
+
     def get_orders_by_restaurant(self, restaurant_id: int):
         """
         Returns all incoming orders for a given restaurant.
         """
         return database.get_incoming_orders_for_restaurant(restaurant_id)
-    
+
     def get_orders_by_user(self, user_id: int):
         """
         Returns all orders placed by a specific user.
         """
         return database.get_orders_for_user(user_id)
-    
+
     def update_payment(self, order_id: int, status: str):
         """
         Updates payment status of an order.

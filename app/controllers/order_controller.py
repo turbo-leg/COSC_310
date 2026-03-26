@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from app import schemas, database
 
 
-from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest, OrderCreateRequest
+from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
 from app.services.order_service import order_service, calculate_total_cost_of_order
 
 router = APIRouter(prefix="/orders", tags=["orders"])
