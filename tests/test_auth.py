@@ -2,7 +2,9 @@
 Testing for the authentication logic.
 """
 from fastapi.testclient import TestClient
+from app import database
 from app.main import app
+from app.auth import get_user
 
 client = TestClient(app)
 
@@ -97,3 +99,38 @@ def test_me_with_token():
     )
 
     assert response.status_code == 200
+
+def test_delete_user_as_admin():
+    """Admin should be able to delete a user by ID."""
+    # create a user first
+    fake_data = {
+        "name": "Delete Me",
+        "email": "deleteme@gmail.com",
+        "password": "deletemepassword"
+    }
+    create_response = client.post("/users", json=fake_data)
+    assert create_response.status_code == 200
+
+    created_user = database.get_user_by_email("deleteme@gmail.com")
+    assert created_user is not None
+    user_id = created_user["userId"]
+
+    # override auth dependency to simulate an admin
+    app.dependency_overrides[get_user] = lambda: {
+        "email": "admin@gmail.com",
+        "role": "admin",
+        "is_admin": True
+    }
+
+    delete_response = client.delete(f"/users/{user_id}")
+    assert delete_response.status_code == 200
+    assert delete_response.json()["message"] == "User deleted"
+
+    # confirm user is really gone
+    assert database.get_user_by_id(user_id) is None
+
+    read_response = client.get(f"/users/{user_id}")
+    assert read_response.status_code == 404
+    assert read_response.json()["detail"] == "User not found"
+
+    app.dependency_overrides.clear()

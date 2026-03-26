@@ -14,6 +14,12 @@ from app.services.order_service import order_service, calculate_total_cost_of_or
 from app.auth_helpers import require_restaurant_owner
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+@router.post("/")
+def place_order(order_request: schemas.OrderCreateRequest):
+    """
+    Endpoint to place a new order.
+    """
+    return order_service.place_order(order_request)
 
 @router.get("/restaurants/{restaurant_id}/orders", response_model=List[OrderResponse])
 def view_incoming_orders(restaurant_id: int):
@@ -21,6 +27,13 @@ def view_incoming_orders(restaurant_id: int):
     Retrieves all incoming orders for a specific restaurant.
     """
     return order_service.get_orders_by_restaurant(restaurant_id)
+
+@router.get("/users/{user_id}/orders", response_model=List[dict])
+def view_user_orders(user_id: int):
+    """
+    Retrieves all orders for a specific user.
+    """
+    return order_service.get_orders_by_user(user_id)
 
 class TotalOrderRequest(BaseModel):
     """
@@ -63,7 +76,7 @@ class PaymentUpdateRequest(BaseModel):
     """
     Schema for updating the payment status.
     """
-    status: str  # "accepted" or "rejected"
+    status: str
 
 @router.patch("/{order_id}/payment")
 def update_payment_status(order_id: int, request: PaymentUpdateRequest):
@@ -76,7 +89,7 @@ def update_payment_status(order_id: int, request: PaymentUpdateRequest):
         return {"error": "Order not found"}
 
     return {
-        "message": f"Payment succesful. Status: {request.status}",
+        "message": f"Payment succesful. Status: {request.status.lower()}",
         "order": updated_order
     }
 

@@ -4,7 +4,8 @@ schemas ensure API data is correctly typed and structured
 they separate API contracts from database models for flexibility
 """
 from typing import List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from app.constants import UserRole, OrderStatus
 
 
 class AdminStatsResponse(BaseModel):
@@ -72,23 +73,31 @@ class OrderModifyRequest(BaseModel):
     items : List[int] | None = None
 
 
-class OrderResponse(BaseModel): # pylint: disable=too-few-public-methods
+class OrderCreateRequest(BaseModel):
+    """
+    Schema for creating a new order.
+    """
+    user_id: int
+    restaurant_id: int
+    items: List[int]
+    time_minutes: int = 20
+    distance_km: float = 5.0
+
+class OrderResponse(BaseModel):
     """
     Schema for viewing incoming restaurant orders.
     """
-    order_id: int
-    restaurant_id: int
-    food_item: str
-    order_time: str
-    order_value: float
-    customer_id: int
+    orderId: int
+    restaurantId: int
+    userId: int
+    items: List[int] = []
+    order_value: float = 0.0
     status: str
+    payment_status: str = "pending"
+    createdAt: str | None = None
+    order_time: str | None = None
 
-    class Config: # pylint: disable=too-few-public-methods
-        """
-        DocString
-        """
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentRequest(BaseModel):
@@ -112,7 +121,7 @@ class TrackOrderResponse(BaseModel):
     Schema for tracking order status and ETA.
     """
     orderId: int
-    status: str
+    status: OrderStatus
     estimatedArrivalTime: str
     minutesRemaining: int
 
@@ -124,7 +133,7 @@ class UpdateOrderStatusRequest(BaseModel):
     new_status: str
 
 
-class UserBase(BaseModel): # pylint: disable=too-few-public-methods
+class UserBase(BaseModel):
     """
     Base attributes for a user.
     """
@@ -132,7 +141,7 @@ class UserBase(BaseModel): # pylint: disable=too-few-public-methods
     email: EmailStr
 
 
-class UserCreate(UserBase): # pylint: disable=too-few-public-methods
+class UserCreate(UserBase):
     """
     Schema for user registration.
     """
@@ -140,7 +149,7 @@ class UserCreate(UserBase): # pylint: disable=too-few-public-methods
                           description= "Password must be at least 8 characters long")
 
 
-class UserLogin(BaseModel): # pylint: disable=too-few-public-methods
+class UserLogin(BaseModel):
     """
     Schema for user login credentials.
     """
@@ -148,14 +157,11 @@ class UserLogin(BaseModel): # pylint: disable=too-few-public-methods
     password: str
 
 
-class UserResponse(UserBase): # pylint: disable=too-few-public-methods
+class UserResponse(UserBase):
     """
     Schema for API user response.
     """
     userId: int
-    role: str
-    class Config: # pylint: disable=too-few-public-methods
-        """
-        DocString
-        """
-        from_attributes = True
+    role: UserRole
+
+    model_config = ConfigDict(from_attributes=True)

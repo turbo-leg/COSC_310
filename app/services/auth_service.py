@@ -6,6 +6,7 @@ from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 from app import database
 from app.token import create_token
+from app.constants import UserRole
 
 class AuthService:
     """
@@ -43,7 +44,7 @@ class AuthService:
         Checks if a user is an admin.
         """
         user = database.get_user_by_id(user_id)
-        return user is not None and user.get("role") == "admin"
+        return user is not None and user.get("role") == UserRole.ADMIN.value
 
     def logout(self, user_id: int):
         """

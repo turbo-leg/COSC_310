@@ -3,14 +3,18 @@ This file defines endpoints for menu-related logic.
 """
 from typing import List
 from fastapi import APIRouter, HTTPException
+from app.constants import UserRole
 from app.database import (
     restaurant_exists,
     get_active_menu_for_restaurant,
     create_menu_item,
     update_menu_item,
     delete_menu_item,
+    get_user_by_id,
+    find_restaurants_by_food_item,
+    get_all_restaurants
 )
-from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate
+from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate, UserResponse
 from app.auth_helpers import require_restaurant_owner
 
 router = APIRouter(
@@ -19,13 +23,13 @@ router = APIRouter(
 )
 
 @router.get("/{restaurant_id}/menu", response_model=List[MenuItemResponse])
-def get_restaurant_menu(restaurant_id: int):
+def get_restaurant_menu(restaurant_id: int, skip: int = 0, limit: int = 100):
     """
     Get active menu items for a specific restaurant.
     """
     if not restaurant_exists(restaurant_id):
         raise HTTPException(status_code=404, detail="Restaurant not found")
-    return get_active_menu_for_restaurant(restaurant_id)
+    return get_active_menu_for_restaurant(restaurant_id, skip=skip, limit=limit)
 
 @router.post("/{restaurant_id}/menu", response_model=MenuItemResponse)
 def add_menu_item(restaurant_id: int, item: MenuItemCreate, owner_id: int = None):
