@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service
 from app.auth import get_user
-from app.auth_helpers import require_admin
+from app.auth_helpers import check_admin_role
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -78,7 +78,7 @@ def delete_user(user_id: int, user=Depends(get_user)):
     """
     Removes user by id.
     """
-    require_admin(user)
+    check_admin_role(user)
     success = user_service.delete_user(user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")

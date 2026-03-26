@@ -3,18 +3,14 @@ This file defines endpoints for menu-related logic.
 """
 from typing import List
 from fastapi import APIRouter, HTTPException
-from app.constants import UserRole
 from app.database import (
     restaurant_exists,
     get_active_menu_for_restaurant,
     create_menu_item,
     update_menu_item,
     delete_menu_item,
-    get_user_by_id,
-    find_restaurants_by_food_item,
-    get_all_restaurants
 )
-from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate, UserResponse
+from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate
 from app.auth_helpers import require_restaurant_owner
 
 router = APIRouter(

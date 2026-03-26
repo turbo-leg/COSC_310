@@ -31,6 +31,14 @@ app.include_router(admin_controller.router)
 app.include_router(payment_controller.router)
 
 
+@app.get("/restaurants", response_model=list)
+def get_restaurants(skip: int = 0, limit: int = 100):
+    """
+    Retrieves all restaurants.
+    """
+    return database.get_all_restaurants(skip=skip, limit=limit)
+
+
 @app.get("/")
 async def root():
     """

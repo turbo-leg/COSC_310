@@ -46,6 +46,17 @@ def require_admin(user_id: int) -> dict:
     return user
 
 
+def check_admin_role(user: dict) -> None:
+    """
+    Check if a user dict has admin role. Raises 403 if not admin.
+    """
+    if not user or user.get("role") != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Admin access required"
+        )
+
+
 def require_restaurant_owner(user_id: int, restaurant_id: int) -> dict:
     """
     Ensure the user exists, is a restaurant owner, and owns the target restaurant.
