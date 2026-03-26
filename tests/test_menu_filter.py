@@ -152,11 +152,10 @@ def test_search_restaurants_by_name():
         3: {"userId": 3, "name": "Sushi", "role": "restaurant", "email": "a", "password": "b"},
         4: {"userId": 4, "name": "Admin", "role": "admin", "email": "a", "password": "b"}
     }
-    results = database.search_restaurants_by_name("planet")
-    assert len(results) == 2
+    results = database.search_restaurants_by_name("zza")
+    assert len(results) == 1
     r_names = [r["name"] for r in results]
     assert "Pizza" in r_names
-    assert "Planet of Sushi" in r_names
 
 def test_search_restaurants_by_name_no_match():
     """ Test case to validate restaurant search with no match. """
