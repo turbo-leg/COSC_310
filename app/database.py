@@ -68,6 +68,13 @@ def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
     """
     return list(users_map.values())[skip : skip + limit]
 
+def get_all_restaurants(skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Returns all users that have the 'restaurant' role.
+    """
+    restaurants = [u for u in users_map.values() if u.get("role") == "restaurant"]
+    return restaurants[skip : skip + limit]
+
 def get_user_by_id(user_id: int) -> Optional[dict]:
     """
     Quickly finds a user with their id number.
@@ -292,6 +299,15 @@ def get_incoming_orders_for_restaurant(restaurant_id: int) -> List[dict]:
     return [
         order for order in orders_map.values()
         if order["restaurantId"] == restaurant_id
+    ]
+
+def get_orders_for_user(user_id: int) -> List[dict]:
+    """
+    Returns all orders for a specific user.
+    """
+    return [
+        order for order in orders_map.values()
+        if order.get("userId") == user_id
     ]
 
 def get_all_orders() -> List[dict]:

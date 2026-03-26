@@ -73,6 +73,16 @@ class OrderModifyRequest(BaseModel):
     items : List[int] | None = None
 
 
+class OrderCreateRequest(BaseModel):
+    """
+    Schema for creating a new order.
+    """
+    user_id: int
+    restaurant_id: int
+    items: List[int]
+    time_minutes: int = 20
+    distance_km: float = 5.0
+
 class OrderResponse(BaseModel):
     """
     Schema for viewing incoming restaurant orders.

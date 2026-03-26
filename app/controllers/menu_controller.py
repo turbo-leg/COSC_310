@@ -11,9 +11,10 @@ from app.database import (
     update_menu_item,
     delete_menu_item,
     get_user_by_id,
-    find_restaurants_by_food_item
+    find_restaurants_by_food_item,
+    get_all_restaurants
 )
-from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate
+from app.schemas import MenuItemResponse, MenuItemCreate, MenuItemUpdate, UserResponse
 
 router = APIRouter(
     prefix="/restaurant",
@@ -40,6 +41,12 @@ def _verify_owner(user_id: int, restaurant_id: int):
             status_code=403,
             detail="Only the restaurant owner can access these endpoints"
         )
+@router.get("s", response_model=List[UserResponse])
+def get_restaurants(skip: int = 0, limit: int = 100):
+    """
+    Get all restaurants.
+    """
+    return get_all_restaurants(skip=skip, limit=limit)
 
 @router.get("/search", response_model=List[MenuItemResponse])
 def search_food_items(query: str, skip: int = 0, limit: int = 100):
