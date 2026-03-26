@@ -26,6 +26,4 @@ def require_admin(user= None):
     """
     if not user or user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
     return user
