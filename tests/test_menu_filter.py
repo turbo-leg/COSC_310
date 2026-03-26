@@ -143,3 +143,25 @@ def test_find_menu_items_by_food_item_no_match():
 
     results = database.find_restaurants_by_food_item("Sushi")
     assert len(results) == 0
+
+def test_search_restaurants_by_name():
+    """ Test case to validate restaurant search by name. """
+    database.users_map = {
+        1: {"userId": 1, "name": "Pizza", "role": "restaurant", "email": "a", "password": "b"},
+        2: {"userId": 2, "name": "Burger", "role": "restaurant", "email": "a", "password": "b"},
+        3: {"userId": 3, "name": "Sushi", "role": "restaurant", "email": "a", "password": "b"},
+        4: {"userId": 4, "name": "Admin", "role": "admin", "email": "a", "password": "b"}
+    }
+    results = database.search_restaurants_by_name("planet")
+    assert len(results) == 2
+    r_names = [r["name"] for r in results]
+    assert "Pizza" in r_names
+    assert "Planet of Sushi" in r_names
+
+def test_search_restaurants_by_name_no_match():
+    """ Test case to validate restaurant search with no match. """
+    database.users_map = {
+        1: {"userId": 1, "name": "Pizza", "role": "restaurant", "email": "a", "password": "b"}
+    }
+    results = database.search_restaurants_by_name("Tacos")
+    assert len(results) == 0

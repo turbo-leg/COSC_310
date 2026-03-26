@@ -81,7 +81,7 @@ def search_restaurants_by_name(query: str, skip: int = 0, limit: int = 100) -> L
     """
     q = query.strip().lower()
     restaurants = [
-        u for u in users_map.values() 
+        u for u in users_map.values()
         if u.get("role") == "restaurant" and q in u.get("name", "").lower()
     ]
     return restaurants[skip : skip + limit]
