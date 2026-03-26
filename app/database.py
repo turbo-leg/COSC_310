@@ -7,6 +7,7 @@ import csv
 import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import declarative_base
+from app.constants import OrderStatus, PaymentStatus
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
@@ -205,11 +206,11 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
-        "status": "pending",
+        "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending",
+        "payment_status": PaymentStatus.UNPAID.value,
         "notifications": [],
         "latestNotification": None,
         "customerNotified": False
@@ -334,7 +335,7 @@ def assign_delivery_to_order(order_id: int, delivery_id: int) -> Optional[dict]:
         return None
 
     order["deliveryId"] = delivery_id
-    order["status"] = "assigned"
+    order["status"] = OrderStatus.ASSIGNED.value
 
     return order
 def cancel_order_in_database(order_id: int) -> Optional[dict]:
@@ -342,7 +343,7 @@ def cancel_order_in_database(order_id: int) -> Optional[dict]:
     Marks an order as status = `cancelled` in db.
     """
     if order_id in orders_map:
-        orders_map[order_id]["status"] = "cancelled"
+        orders_map[order_id]["status"] = OrderStatus.CANCELLED.value
         return orders_map[order_id]
     return None
 
@@ -363,6 +364,9 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
     """
     total = 0.0
     for order in orders_map.values():
-        if order.get("restaurantId") == restaurant_id and order.get("payment_status") == "accepted":
+        if (
+            order.get("restaurantId") == restaurant_id
+            and order.get("payment_status") == PaymentStatus.ACCEPTED.value
+        ):
             total += order.get("order_value", 0.0)
     return total

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from fastapi import HTTPException
 from app import database, schemas
 from app.services.delivery_service import calculate_delivery_cost
+from app.constants import OrderStatus, PaymentStatus
 
 def _build_tracking_response(order: dict) -> dict:
     """
@@ -50,12 +51,14 @@ class OrderService:
         """
         Updates payment status of an order.
         """
-        if status.lower() in ["declined", "rejected"]:
+        status_value = status.value if isinstance(status, PaymentStatus) else str(status).lower()
+        blocked_statuses = [PaymentStatus.REJECTED.value, OrderStatus.DECLINED.value]
+        if status_value in blocked_statuses:
             raise HTTPException(
                 status_code=400,
                 detail="Payment declined. Cannot process transaction."
             )
-        updated_order = database.update_payment_status(order_id, status)
+        updated_order = database.update_payment_status(order_id, status_value)
         if not updated_order:
             raise HTTPException(
                 status_code=404,
@@ -100,7 +103,9 @@ class OrderService:
         if not order:
             raise HTTPException(status_code = 404, detail="Order Not Found")
 
-        if order["status"] not in ["pending", "accepted"]:
+        allowed_statuses = [OrderStatus.PENDING.value, OrderStatus.ACCEPTED.value]
+
+        if order["status"] not in allowed_statuses:
             raise HTTPException(
                 status_code=400,
                 detail=f"""Cannot cancel order. Current status is {order['status']}""")
@@ -115,7 +120,9 @@ class OrderService:
         order = database.get_order_by_id(order_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order Not Found")
-        if order["status"] not in ["pending", "accepted"]:
+
+        allowed_statuses = [OrderStatus.PENDING.value, OrderStatus.ACCEPTED.value]
+        if order["status"] not in allowed_statuses:
             raise HTTPException(
                 status_code=400,
                 detail=f"""Cannot modify order. Current status is {order['status']}""")
