@@ -1,7 +1,10 @@
 """Tests for customer order tracking."""
 
 from datetime import datetime, timedelta
+
+from fastapi import HTTPException
 import pytest
+
 from app import database
 from app.services.order_service import order_service
 
@@ -132,9 +135,13 @@ def test_track_order_clamps_remaining_time_at_zero():
     assert tracked is not None
     assert tracked["minutesRemaining"] == 0
 
-def test_track_order_returns_none_for_missing_order():
-    """Tracking a missing order should return None."""
-    assert order_service.track_order(999) is None
+def test_track_order_raises_404_for_missing_order():
+    """Tracking a missing order should raise HTTP 404."""
+    with pytest.raises(HTTPException) as exc_info:
+        order_service.track_order(999)
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Order not found"
 
 def test_status_change_notifies_customer():
     """Customer should be notified when order status changes."""

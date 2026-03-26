@@ -3,31 +3,79 @@ Handles order-related operations.
 """
 
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 from app import database, schemas
 from app.services.delivery_service import calculate_delivery_cost
+from app.constants import OrderStatus, PaymentStatus
+
+def _build_tracking_response(order: dict) -> dict:
+    """
+    Builds a consistent tracking response for an order.
+    """
+    created_at_str = order.get("createdAt")
+    estimated_delivery_minutes = order.get("estimatedDeliveryMinutes", 0)
+
+    if not created_at_str:
+        raise ValueError("Order is missing createdAt")
+
+    created_at = datetime.fromisoformat(created_at_str)
+    estimated_arrival = created_at + timedelta(minutes=estimated_delivery_minutes)
+    now = datetime.now()
+
+    minutes_remaining = max(
+        0,
+        int((estimated_arrival - now).total_seconds() // 60)
+    )
+
+    return {
+        "orderId": order.get("orderId"),
+        "status": order.get("status"),
+        "createdAt": created_at_str,
+        "estimatedDeliveryMinutes": estimated_delivery_minutes,
+        "estimatedArrivalTime": estimated_arrival.isoformat(),
+        "minutesRemaining": minutes_remaining,
+    }
 
 class OrderService:
     """
     Handles order retrieval logic, like fetching orders for a restaurant.
     """
+    def place_order(self, request: schemas.OrderCreateRequest):
+        """
+        Places a new order in the system.
+        """
+        return database.create_order(
+            user_id=request.user_id,
+            restaurant_id=request.restaurant_id,
+            items=request.items,
+            time_minutes=request.time_minutes
+        )
 
     def get_orders_by_restaurant(self, restaurant_id: int):
         """
         Returns all incoming orders for a given restaurant.
         """
         return database.get_incoming_orders_for_restaurant(restaurant_id)
+
+    def get_orders_by_user(self, user_id: int):
+        """
+        Returns all orders placed by a specific user.
+        """
+        return database.get_orders_for_user(user_id)
+
     def update_payment(self, order_id: int, status: str):
         """
         Updates payment status of an order.
         """
-        if status.lower() in ["declined", "rejected"]:
+        status_value = status.value if isinstance(status, PaymentStatus) else str(status).lower()
+        blocked_statuses = [PaymentStatus.REJECTED.value, OrderStatus.DECLINED.value]
+        if status_value in blocked_statuses:
             raise HTTPException(
                 status_code=400,
                 detail="Payment declined. Cannot process transaction."
             )
-        updated_order = database.update_payment_status(order_id, status)
+        updated_order = database.update_payment_status(order_id, status_value)
         if not updated_order:
             raise HTTPException(
                 status_code=404,
@@ -47,43 +95,17 @@ class OrderService:
         """
         order = database.get_order_by_id(order_id)
         if not order:
-            return None
+            raise HTTPException(status_code=404, detail="Order not found")
 
-        created_at = datetime.fromisoformat(order["createdAt"])
-        eta_minutes = order["estimatedDeliveryMinutes"]
-        estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+        return _build_tracking_response(order)
 
-        elapsed_time = (datetime.now() - created_at).total_seconds() // 60
-        minutes_remaining = max(0, eta_minutes - elapsed_time)
-
-        return {
-            "orderId": order["orderId"],
-            "status": order["status"],
-            "estimatedArrivalTime": estimated_arrival.isoformat(),
-            "minutesRemaining": minutes_remaining
-        }
-
-    def track_order_for_restaurant(self, restaurant_id: int):
+    def track_order_for_restaurant(self, restaurant_id: int) -> List[dict]:
         """
-        Returns delivery tracking info for all orders of a restaurant.
+        Returns tracking info for all orders belonging to a restaurant.
         """
         orders = database.get_incoming_orders_for_restaurant(restaurant_id)
-        tracking_info = []
-        for order in orders:
-            created_at = datetime.fromisoformat(order["createdAt"])
-            eta_minutes = order["estimatedDeliveryMinutes"]
-            estimated_arrival = datetime.fromisoformat(order["estimatedArrivalTime"])
+        return [_build_tracking_response(order) for order in orders]
 
-            elapsed_time = (datetime.now() - created_at).total_seconds() // 60
-            minutes_remaining = max(0, eta_minutes - elapsed_time)
-
-            tracking_info.append({
-                "orderId": order["orderId"],
-                "status": order["status"],
-                "estimatedArrivalTime": estimated_arrival.isoformat(),
-                "minutesRemaining": minutes_remaining
-            })
-        return tracking_info
 
     def update_order_status(self, order_id: int, new_status: str):
         """
@@ -98,7 +120,9 @@ class OrderService:
         if not order:
             raise HTTPException(status_code = 404, detail="Order Not Found")
 
-        if order["status"] not in ["pending", "accepted"]:
+        allowed_statuses = [OrderStatus.PENDING.value, OrderStatus.ACCEPTED.value]
+
+        if order["status"] not in allowed_statuses:
             raise HTTPException(
                 status_code=400,
                 detail=f"""Cannot cancel order. Current status is {order['status']}""")
@@ -113,7 +137,9 @@ class OrderService:
         order = database.get_order_by_id(order_id)
         if not order:
             raise HTTPException(status_code=404, detail="Order Not Found")
-        if order["status"] not in ["pending", "accepted"]:
+
+        allowed_statuses = [OrderStatus.PENDING.value, OrderStatus.ACCEPTED.value]
+        if order["status"] not in allowed_statuses:
             raise HTTPException(
                 status_code=400,
                 detail=f"""Cannot modify order. Current status is {order['status']}""")

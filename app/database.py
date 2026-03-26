@@ -7,6 +7,7 @@ import csv
 import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import declarative_base
+from app.constants import OrderStatus, PaymentStatus
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
@@ -21,6 +22,27 @@ def load_users_from_csv() -> None:
     """
     Todo: Load users from CSV into the in-memory map
     """
+    global users_map, NEXT_ID  # pylint: disable=global-statement
+
+    users_map = {}
+
+    try:
+        with open(CSV_FILE_PATH, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                user_id = int(row["userId"])
+                row["userId"] = user_id
+                users_map[user_id] = row
+
+            if users_map:
+                NEXT_ID = max(users_map.keys()) + 1
+            else:
+                NEXT_ID = 1
+
+    except FileNotFoundError:
+        users_map = {}
+        NEXT_ID = 1
 
 def save_users_to_csv():
     """
@@ -37,6 +59,7 @@ def init_storage() -> None:
     """
     Todo: Initialize storage by loading users from CSV
     """
+    load_users_from_csv()
     load_menu_items_from_csv()
 
 def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
@@ -44,6 +67,13 @@ def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
     Todo: Return a list of users
     """
     return list(users_map.values())[skip : skip + limit]
+
+def get_all_restaurants(skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Returns all users that have the 'restaurant' role.
+    """
+    restaurants = [u for u in users_map.values() if u.get("role") == "restaurant"]
+    return restaurants[skip : skip + limit]
 
 def get_user_by_id(user_id: int) -> Optional[dict]:
     """
@@ -78,10 +108,13 @@ def create_user(name: str, email: str, password:str, role:str) -> dict:
     return new_user
 
 def delete_user(user_id: int) -> bool:
-    """
-    Todo: Delete a user by ID
-    """
-    _ = user_id
+    """Delete a user by ID and persist the updated data."""
+    if user_id not in users_map:
+        return False
+
+    del users_map[user_id]
+    save_users_to_csv()
+    return True
 
 def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
     """
@@ -163,31 +196,30 @@ def restaurant_exists(restaurant_id: int) -> bool:
     return False
 
 
-def get_active_menu_for_restaurant(restaurant_id: int) -> List[dict]:
+def get_active_menu_for_restaurant(restaurant_id: int, skip: int = 0, limit: int = 100
+) -> List[dict]:
     """
     Returns active menu items for one restaurant.
     """
-    return [
+    items = [
         item for item in menu_items
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
+    return items[skip : skip + limit]
 
-def find_restaurants_by_food_item(food_name: str) -> Dict[int, List[dict]]:
+def find_restaurants_by_food_item(food_name: str, skip: int = 0, limit: int = 100) -> List[dict]:
     """
-    Returns restaurants with the inputted food name. Only menu items with the food name are returned
+    Returns menu items with the inputted food name (paginated).
     """
     food = food_name.strip().lower()
-    results = {}
+    results = []
     for item in menu_items:
         if not item.get("isActive"):
             continue
         item_name = item.get("name", "").strip().lower()
         if food in item_name:
-            restaurant_id = item.get("restaurantId")
-            if restaurant_id not in results:
-                results[restaurant_id] = []
-            results[restaurant_id].append(item)
-    return results
+            results.append(item)
+    return results[skip : skip + limit]
 def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.
@@ -200,17 +232,23 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
     estimated_delivery_minutes = 15 + 5 + time_minutes
     estimated_arrival_time = created_at + datetime.timedelta(
         minutes=estimated_delivery_minutes)
+    total_value = 0.0
+    for item_id in items:
+        item = get_menu_item_by_id(item_id)
+        if item:
+            total_value += item.get("price", 0.0)
 
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
-        "status": "pending",
+        "order_value": total_value,
+        "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending",
+        "payment_status": PaymentStatus.UNPAID.value,
         "notifications": [],
         "latestNotification": None,
         "customerNotified": False
@@ -267,6 +305,15 @@ def get_incoming_orders_for_restaurant(restaurant_id: int) -> List[dict]:
     return [
         order for order in orders_map.values()
         if order["restaurantId"] == restaurant_id
+    ]
+
+def get_orders_for_user(user_id: int) -> List[dict]:
+    """
+    Returns all orders for a specific user.
+    """
+    return [
+        order for order in orders_map.values()
+        if order.get("userId") == user_id
     ]
 
 def get_all_orders() -> List[dict]:
@@ -335,7 +382,7 @@ def assign_delivery_to_order(order_id: int, delivery_id: int) -> Optional[dict]:
         return None
 
     order["deliveryId"] = delivery_id
-    order["status"] = "assigned"
+    order["status"] = OrderStatus.ASSIGNED.value
 
     return order
 def cancel_order_in_database(order_id: int) -> Optional[dict]:
@@ -343,7 +390,7 @@ def cancel_order_in_database(order_id: int) -> Optional[dict]:
     Marks an order as status = `cancelled` in db.
     """
     if order_id in orders_map:
-        orders_map[order_id]["status"] = "cancelled"
+        orders_map[order_id]["status"] = OrderStatus.CANCELLED.value
         return orders_map[order_id]
     return None
 
@@ -364,6 +411,9 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
     """
     total = 0.0
     for order in orders_map.values():
-        if order.get("restaurantId") == restaurant_id and order.get("payment_status") == "accepted":
+        if (
+            order.get("restaurantId") == restaurant_id
+            and order.get("payment_status") == PaymentStatus.ACCEPTED.value
+        ):
             total += order.get("order_value", 0.0)
     return total

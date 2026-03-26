@@ -54,17 +54,17 @@ def test_cancel_order_too_late():
 def test_modify_order_success():
     """Test modifying an order that is still pending."""
 
-    payload = {"food_item": "Curly Fries", "order_value": 12.0}
+    payload = {"items": [99], "order_value": 12.0}
     response = client.put("/orders/1/modify", json=payload)
 
     assert response.status_code == 200
-    assert response.json()["food_item"] == "Curly Fries"
+    assert response.json()["items"] == [99]
     assert response.json()["order_value"] == 12.0
 
 def test_modify_order_too_late():
     """Test modifying an order that is already being prepared."""
 
-    payload = {"food_item": "Salad"}
+    payload = {"item": [50]}
     response = client.put("/orders/2/modify", json=payload)
 
     assert response.status_code == 400

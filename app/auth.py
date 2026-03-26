@@ -4,6 +4,7 @@ Authentication utilities.
 
 from fastapi import Header, HTTPException
 from app.token import decode_token
+from app.constants import UserRole
 
 def get_user(authorization: str = Header(None)):
     """
