@@ -151,11 +151,5 @@ class UserResponse(UserBase):
     """
     userId: int
     role: UserRole
-    class Config: # pylint: disable=too-few-public-methods
-        """
-        DocString
-        """
-        from_attributes = True
-    role: str
 
     model_config = ConfigDict(from_attributes=True)
