@@ -31,8 +31,8 @@ def _verify_owner(user_id: int, restaurant_id: int):
 
     user = get_user_by_id(user_id)
     if (
-        not user 
-        or user.get("role") != UserRole.RESTAURANT.value or 
+        not user
+        or user.get("role") != UserRole.RESTAURANT.value or
         user.get("userId") != restaurant_id
     ):
         raise HTTPException(
