@@ -77,13 +77,15 @@ class OrderResponse(BaseModel):
     """
     Schema for viewing incoming restaurant orders.
     """
-    order_id: int
-    restaurant_id: int
-    food_item: str
-    order_time: str
-    order_value: float
-    customer_id: int
+    orderId: int
+    restaurantId: int
+    userId: int
+    items: List[int] = []
+    order_value: float = 0.0
     status: str
+    payment_status: str = "pending"
+    createdAt: str | None = None
+    order_time: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
