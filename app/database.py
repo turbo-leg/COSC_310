@@ -75,6 +75,17 @@ def get_all_restaurants(skip: int = 0, limit: int = 100) -> List[dict]:
     restaurants = [u for u in users_map.values() if u.get("role") == "restaurant"]
     return restaurants[skip : skip + limit]
 
+def search_restaurants_by_name(query: str, skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Returns all restaurants that match the search query.
+    """
+    q = query.strip().lower()
+    restaurants = [
+        u for u in users_map.values() 
+        if u.get("role") == "restaurant" and q in u.get("name", "").lower()
+    ]
+    return restaurants[skip : skip + limit]
+
 def get_user_by_id(user_id: int) -> Optional[dict]:
     """
     Quickly finds a user with their id number.
