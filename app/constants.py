@@ -9,6 +9,7 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     RESTAURANT = "restaurant"
     REGULAR_USER = "regular_user"
+    CUSTOMER = "customer"
 
 
 class OrderStatus(str, Enum):
@@ -26,6 +27,7 @@ class OrderStatus(str, Enum):
 class PaymentStatus(str, Enum):
     """Supported payment states."""
     UNPAID = "pending"
+    PARTIAL = "partial"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
 

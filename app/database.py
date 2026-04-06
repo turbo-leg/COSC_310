@@ -17,6 +17,11 @@ Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
 
+def _round_money(value: float) -> float:
+    """
+    Rounds a float to 2 decimal places, representing money.
+    """
+    return round(value, 2)
 
 def load_users_from_csv() -> None:
     """
@@ -33,6 +38,7 @@ def load_users_from_csv() -> None:
             for row in reader:
                 user_id = int(row["userId"])
                 row["userId"] = user_id
+                row["walletBalance"] = _round_money(float(row.get("walletBalance", 0.0)))
                 users_map[user_id] = row
 
             if users_map:
