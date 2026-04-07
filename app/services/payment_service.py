@@ -1,5 +1,5 @@
 """
-Payment service Logic 
+Payment service logic.
 """
 import uuid
 from fastapi import HTTPException
@@ -12,10 +12,10 @@ def _validate_credit_card(credit_card: str | None) -> str | None:
     """
     if credit_card is None or credit_card == "":
         return None
-    
+
     if len(credit_card) != 16 or not credit_card.isdigit():
         raise HTTPException(status_code=400, detail="Card is Invalid, must be 16 digits.")
-    
+
     return credit_card
 
 def _round_money(value: float) -> float:
@@ -26,29 +26,30 @@ def _round_money(value: float) -> float:
 
 def process_payment(order_id: int, payer_user_id: int, credit_card: str | None = None) -> dict:
     """
-    Apply wallet funds first, then charge remaining amount to credit card if needed. Returns a receipt with transaction details.
+    Apply wallet funds first, then charge remaining amount to credit card.
+    Returns a receipt with transaction details.
     """
     card = _validate_credit_card(credit_card)
 
     order = database.get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail= "Order Not Found.")
-    
+
     if order.get("userId") != payer_user_id:
-        raise HTTPException(status_code=403, detail="Unauthorized to pay for this order.")
+        raise HTTPException(status_code=403, detail="You can only pay for your own orders.")
 
     if order.get("payment_status") == PaymentStatus.ACCEPTED.value:
         raise HTTPException(status_code=400, detail="Order Already Paid.")
-    
+
     user = database.get_user_by_id(payer_user_id)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid User.")
-    
+
     remaining_due = _round_money(
         order.get("amount_due", order.get("total_cost", order.get("order_value", 0.0)))
     )
 
-    wallet_balance = _round_money(user.get("walletBalance", 0.0 ))
+    wallet_balance = _round_money(user.get("walletBalance", 0.0))
     wallet_applied = min(wallet_balance, remaining_due)
     if wallet_applied > 0:
         database.deduct_wallet_funds(payer_user_id, wallet_applied)

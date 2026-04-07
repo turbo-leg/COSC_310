@@ -1,5 +1,7 @@
 """Tests for customer wallet preload and wallet-backed payments."""
 
+# pylint: disable=duplicate-code
+
 from fastapi.testclient import TestClient
 
 from app import database

@@ -50,33 +50,36 @@ def setup_function():
         },
     }
 
-    
+
 def test_successful_payment():
     """
     Tests if a valid 16-digit card processes successfully.
     """
+    user = database.users_map[1]
+
     response = client.post("/payments/process", json={
         "order_id": 1,
         "credit_card": "1234567812345678"
-    })
+    }, headers=_auth_header(user))
 
     assert response.status_code == 200
     data = response.json()
-
     assert data["transaction_id"].startswith("RCPT_")
     assert len(data["transaction_id"]) > 10
     assert data["message"] == "Payment accepted!"
-
     assert database.orders_map[1]["payment_status"] == "accepted"
 
 def test_invalid_credit_card_length():
     """
     Tests if the system rejects cards that aren't 16 digits.
     """
+
+    user = database.users_map[1]
+
     response = client.post("/payments/process", json={
         "order_id": 1,
-        "credit_card": "12345" 
-    })
+        "credit_card": "12345"
+    }, headers=_auth_header(user))
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Card is Invalid, must be 16 digits."
@@ -85,10 +88,12 @@ def test_prevent_double_charge():
     """
     Tests if the system blocks payment for an order that is already paid.
     """
+    user = database.users_map[1]
+
     response = client.post("/payments/process", json={
-        "order_id": 2,  
+        "order_id": 2,
         "credit_card": "1234567812345678"
-    })
+    }, headers=_auth_header(user))
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Order Already Paid."
@@ -100,17 +105,12 @@ def test_mock_uuid_receipt(mock_uuid):
     Tests that generation of receipts is predictable.
     """
     mock_uuid.return_value.hex = "1234567890abcdef"
-    database.orders_map = {
-        1:{
-            "orderId": 1,
-            "payment_status": "pending"
-        }
-    }
+    user = database.users_map[1]
 
     response = client.post("/payments/process", json={
         "order_id": 1,
         "credit_card": "1234567812345678"
-    })
+    }, headers=_auth_header(user))
 
     assert response.status_code == 200
     assert response.json()["transaction_id"] == "RCPT_1234567890abcdef"

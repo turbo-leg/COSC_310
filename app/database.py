@@ -163,7 +163,7 @@ def add_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
     user = users_map.get(user_id)
     if not user:
         return None
-    
+
     current_balance = _round_money(user.get("walletBalance", 0.0))
     return update_user_wallet_balance(user_id, current_balance + amount)
 
@@ -174,7 +174,7 @@ def deduct_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
     user = users_map.get(user_id)
     if not user:
         return None
-    
+
     current_balance = _round_money(user.get("walletBalance", 0.0))
     if amount > current_balance:
         return None  # Not enough funds
@@ -286,7 +286,13 @@ def find_restaurants_by_food_item(food_name: str, skip: int = 0, limit: int = 10
             results.append(item)
     return results[skip : skip + limit]
 
-def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20) -> dict:
+def create_order(
+    user_id: int,
+    restaurant_id: int,
+    items: list,
+    time_minutes: int = 20,
+    delivery_fee: float = 0.0,
+) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.
     """
@@ -304,12 +310,21 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         if item:
             total_value += item.get("price", 0.0)
 
+    delivery_fee = _round_money(delivery_fee)
+    total_value = _round_money(total_value)
+    total_cost = _round_money(total_value + delivery_fee)
+
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
         "order_value": total_value,
+        "delivery_fee": delivery_fee,
+        "total_cost": total_cost,
+        "amount_paid": 0.0,
+        "amount_due": total_cost,
+        "wallet_applied": 0.0,
         "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,

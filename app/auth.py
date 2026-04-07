@@ -14,7 +14,7 @@ def get_user(authorization: str = Header(default=None)):
     """
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
-    
+
     if not authorization.startswith(BEARER_PREFIX):
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
 
@@ -23,7 +23,7 @@ def get_user(authorization: str = Header(default=None)):
 
     if not token_data:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
+
     user = get_user_by_email(token_data.get("email", ""))
     if not user:
         raise HTTPException(status_code=401, detail="User not found")

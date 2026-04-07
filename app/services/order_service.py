@@ -48,7 +48,7 @@ class OrderService:
         delivery_fee = calculate_delivery_cost(
             request.distance_km, request.time_minutes
             )
-        
+
         return database.create_order(
             user_id=request.user_id,
             restaurant_id=request.restaurant_id,
