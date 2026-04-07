@@ -152,6 +152,9 @@ class UserCreate(UserBase):
 
     @model_validator(mode="after")
     def validate_role_restaurant(self):
+        """
+        Check if role is correct based on input.
+        """
         if self.role == UserRole.RESTAURANT and self.restaurantId is None:
             raise ValueError("restaurantId is required when role is restaurant")
         if self.role != UserRole.RESTAURANT and self.restaurantId is not None:
