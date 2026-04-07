@@ -55,11 +55,21 @@ def save_users_to_csv():
     Saves all user data into a permanent CSV file.
     """
     with open(CSV_FILE_PATH, mode = 'w', newline = '', encoding= 'utf-8') as file:
-        field_names = ["userId", "name", "email", "password", "role"]
+        field_names = [
+            "userId", 
+            "name", 
+            "email", 
+            "password", 
+            "role",
+            "walletBalance"]
         writer = csv.DictWriter(file, fieldnames = field_names)
         writer.writeheader()
         for user in users_map.values():
-            writer.writerow(user)
+            user_to_write = dict(user)  # Create a copy to avoid mutating the original
+            user_to_write["walletBalance"] = _round_money(
+                user_to_write.get("walletBalance", 0.0)
+                )
+            writer.writerow(user_to_write)
 
 def init_storage() -> None:
     """
@@ -117,7 +127,8 @@ def create_user(name: str, email: str, password:str, role:str) -> dict:
       "name": name,
       "email": email,
       "password": password,
-      "role": role
+      "role": role,
+      "walletBalance": 0.0
    }
     users_map[NEXT_ID] = new_user
     NEXT_ID += 1
@@ -132,6 +143,43 @@ def delete_user(user_id: int) -> bool:
     del users_map[user_id]
     save_users_to_csv()
     return True
+
+def update_user_wallet_balance(user_id: int, new_balance: float) -> Optional[dict]:
+    """
+    Updates the wallet balance for a user and persists the change to CSV.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+
+    user["walletBalance"] = _round_money(new_balance)
+    save_users_to_csv()
+    return user
+
+def add_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
+    """
+    Adds funds to a user's wallet.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+    
+    current_balance = _round_money(user.get("walletBalance", 0.0))
+    return update_user_wallet_balance(user_id, current_balance + amount)
+
+def deduct_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
+    """
+    Deducts wallet funds if available.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+    
+    current_balance = _round_money(user.get("walletBalance", 0.0))
+    if amount > current_balance:
+        return None  # Not enough funds
+
+    return update_user_wallet_balance(user_id, current_balance - amount)
 
 def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
     """
@@ -237,6 +285,7 @@ def find_restaurants_by_food_item(food_name: str, skip: int = 0, limit: int = 10
         if food in item_name:
             results.append(item)
     return results[skip : skip + limit]
+
 def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.

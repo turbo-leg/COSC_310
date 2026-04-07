@@ -43,13 +43,18 @@ class OrderService:
     """
     def place_order(self, request: schemas.OrderCreateRequest):
         """
-        Places a new order in the system.
+        Places a new order in the system, with delivery fee logic.
         """
+        delivery_fee = calculate_delivery_cost(
+            request.distance_km, request.time_minutes
+            )
+        
         return database.create_order(
             user_id=request.user_id,
             restaurant_id=request.restaurant_id,
             items=request.items,
-            time_minutes=request.time_minutes
+            time_minutes=request.time_minutes,
+            delivery_fee = delivery_fee
         )
 
     def get_orders_by_restaurant(self, restaurant_id: int):
