@@ -69,7 +69,12 @@ def require_restaurant_owner(user_id: int, restaurant_id: int) -> dict:
             detail="Only the restaurant owner can access these endpoints"
         )
 
-    if user.get("restaurantId") != restaurant_id:
+    owner_restaurant_id = user.get("restaurantId")
+    # Backward compatibility: legacy data used userId as restaurant_id.
+    if owner_restaurant_id is None:
+        owner_restaurant_id = user.get("userId")
+
+    if owner_restaurant_id != restaurant_id:
         raise HTTPException(
             status_code=403,
             detail="Only the restaurant owner can access these endpoints"
