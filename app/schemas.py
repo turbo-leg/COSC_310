@@ -4,7 +4,7 @@ schemas ensure API data is correctly typed and structured
 they separate API contracts from database models for flexibility
 """
 from typing import List
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 from app.constants import UserRole, OrderStatus
 
 
@@ -147,6 +147,18 @@ class UserCreate(UserBase):
     """
     password: str = Field(..., min_length = 8,
                           description= "Password must be at least 8 characters long")
+    role: UserRole = UserRole.REGULAR_USER
+    restaurantId: int | None = None
+
+    @model_validator(mode="after")
+    def validate_role_restaurant(self):
+        if self.role == UserRole.RESTAURANT and self.restaurantId is None:
+            raise ValueError("restaurantId is required when role is restaurant")
+        if self.role != UserRole.RESTAURANT and self.restaurantId is not None:
+            raise ValueError("restaurantId can only be set when role is restaurant")
+        if self.role == UserRole.ADMIN:
+            raise ValueError("admin role cannot be chosen at registration")
+        return self
 
 
 class UserLogin(BaseModel):

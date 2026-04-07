@@ -49,8 +49,11 @@ def create_user(user: UserCreate):
     return {
         "message": "SUCCESSFUL",
         "user": {
+            "userId": new_user["userId"],
             "name": new_user["name"],
-            "email": new_user["email"]
+            "email": new_user["email"],
+            "role": new_user.get("role"),
+            "restaurantId": new_user.get("restaurantId")
     }
     }
 
