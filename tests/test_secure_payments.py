@@ -5,18 +5,52 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from app.main import app
 from app import database
+from app.token import create_token
 
 client = TestClient(app)
 
+def _auth_header(user: dict) -> dict:
+    """Helper to create auth header for a test user."""
+    token = create_token(user)
+    return {"Authorization": f"Bearer {token}"}
+
+
 def setup_function():
-    """
-    Reset the database state before every test.
-    """
+    """Reset database state before every test."""
+    database.users_map = {
+        1: {
+            "userId": 1,
+            "name": "Customer One",
+            "email": "customer1@test.com",
+            "password": "hashed",
+            "role": "customer",
+            "walletBalance": 0.0,
+        }
+    }
     database.orders_map = {
-        1: {"orderId": 1, "payment_status": "pending"},
-        2: {"orderId": 2, "payment_status": "accepted"}
+        1: {
+            "orderId": 1,
+            "userId": 1,
+            "payment_status": "pending",
+            "order_value": 20.0,
+            "total_cost": 20.0,
+            "amount_paid": 0.0,
+            "amount_due": 20.0,
+            "wallet_applied": 0.0,
+        },
+        2: {
+            "orderId": 2,
+            "userId": 1,
+            "payment_status": "accepted",
+            "order_value": 10.0,
+            "total_cost": 10.0,
+            "amount_paid": 10.0,
+            "amount_due": 0.0,
+            "wallet_applied": 0.0,
+        },
     }
 
+    
 def test_successful_payment():
     """
     Tests if a valid 16-digit card processes successfully.
