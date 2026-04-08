@@ -11,6 +11,7 @@ import UserOrders from '@/pages/UserOrders'
 import RestaurantOrders from '@/pages/RestaurantOrders'
 import OrderTracker from '@/pages/OrderTracker'
 import DeliveryManager from '@/pages/DeliveryManager'
+import RestaurantMenuManager from '@/pages/RestaurantMenuManager'
 
 import './App.css'
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/payment/:orderId" element={<CheckoutPayment />} />
             <Route path="/orders" element={<UserOrders />} />
             <Route path="/restaurant-orders" element={<RestaurantOrders />} />
+            <Route path="/menu-manager" element={<RestaurantMenuManager />} />
             <Route path="/order/:id/track" element={<OrderTracker />} />
             <Route path="/dispatch" element={<DeliveryManager />} />
           </Routes>

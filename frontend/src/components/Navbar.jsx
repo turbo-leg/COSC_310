@@ -31,9 +31,14 @@ export function Navbar({ token, setToken }) {
               </Link>
             )}
             {userRole === 'restaurant' && (
-              <Link to="/restaurant-orders">
-                <Button variant="outline" className="border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100">Restaurant Queue</Button>
-              </Link>
+              <>
+                <Link to="/menu-manager">
+                  <Button variant="outline" className="border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100">Manage Menu</Button>
+                </Link>
+                <Link to="/restaurant-orders">
+                  <Button variant="outline" className="border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100">Restaurant Queue</Button>
+                </Link>
+              </>
             )}
             {userRole === 'admin' && (
               <Link to="/admin">
