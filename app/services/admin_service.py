@@ -37,5 +37,15 @@ class AdminService:
             "total_revenue": round(total_revenue, 2),
             "total_menu_items": total_menu_items
         }
+    
+    def create_promo(self, code: str, discount: float, expiry: str, assigned_users):
+        """
+        Handles logic for creating promo codes
+        """
+        existing = database.get_promo_code(code)
+        if existing:
+            raise Exception("Promo code already exists")
+
+        return database.create_promo_code(code, discount, expiry, assigned_users)
 
 admin_service = AdminService()
