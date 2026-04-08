@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import api from '@/lib/api';
 
 export default function Login({ setToken }) {
   const [email, setEmail] = useState('');
@@ -16,23 +18,12 @@ export default function Login({ setToken }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid email or password');
-      }
-
-      const data = await response.json();
+      const { data } = await api.post('/users/login', { email, password });
       setToken(data.token);
       localStorage.setItem('token', data.token);
     } catch (err) {
-      setError(err.message);
+      const detail = err?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -71,6 +62,12 @@ export default function Login({ setToken }) {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            <p className="text-sm text-muted-foreground text-center">
+              Need an account?{' '}
+              <Link to="/register" className="underline font-medium text-primary">
+                Register
+              </Link>
+            </p>
           </CardContent>
           <CardFooter>
             <Button className="w-full" type="submit" disabled={loading}>

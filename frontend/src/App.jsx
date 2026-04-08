@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
 import Login from '@/pages/Login'
+import Register from '@/pages/Register'
 import { Navbar } from '@/components/Navbar'
 import { Home } from '@/pages/Home'
 import OrderCheckout from '@/pages/OrderCheckout'
@@ -29,6 +30,10 @@ function App() {
             <Route 
               path="/login" 
               element={!token ? <Login setToken={setToken} /> : <Navigate to="/" />} 
+            />
+            <Route
+              path="/register"
+              element={!token ? <Register /> : <Navigate to="/" />}
             />
             <Route path="/restaurant/:id" element={<OrderCheckout />} />
             <Route path="/admin" element={<AdminDashboard />} />

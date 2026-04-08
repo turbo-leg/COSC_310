@@ -20,9 +20,14 @@ export function Navbar({ token, setToken }) {
       </div>
       <div className="flex gap-4">
         {!token ? (
-          <Link to="/login">
-            <Button variant="default">Login</Button>
-          </Link>
+          <>
+            <Link to="/login">
+              <Button variant="default">Login</Button>
+            </Link>
+            <Link to="/register">
+              <Button variant="outline">Register</Button>
+            </Link>
+          </>
         ) : (
           <>
             {(userRole === 'customer' || userRole === 'regular_user') && (
