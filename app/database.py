@@ -449,7 +449,7 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
     for order in orders_map.values():
         if (
             order.get("restaurantId") == restaurant_id
-            and order.get("payment_status") == PaymentStatus.ACCEPTED.value
+            and order.get("payment_status") in (PaymentStatus.ACCEPTED.value, "paid")
         ):
             total += order.get("order_value", 0.0)
     return total

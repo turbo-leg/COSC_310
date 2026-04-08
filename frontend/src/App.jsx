@@ -7,6 +7,10 @@ import { Home } from '@/pages/Home'
 import OrderCheckout from '@/pages/OrderCheckout'
 import AdminDashboard from '@/pages/AdminDashboard'
 import CheckoutPayment from '@/pages/CheckoutPayment'
+import UserOrders from '@/pages/UserOrders'
+import RestaurantOrders from '@/pages/RestaurantOrders'
+import OrderTracker from '@/pages/OrderTracker'
+import DeliveryManager from '@/pages/DeliveryManager'
 
 import './App.css'
 
@@ -28,6 +32,10 @@ function App() {
             <Route path="/restaurant/:id" element={<OrderCheckout />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/payment/:orderId" element={<CheckoutPayment />} />
+            <Route path="/orders" element={<UserOrders />} />
+            <Route path="/restaurant-orders" element={<RestaurantOrders />} />
+            <Route path="/order/:id/track" element={<OrderTracker />} />
+            <Route path="/dispatch" element={<DeliveryManager />} />
           </Routes>
         </main>
       </div>
