@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { ShoppingBag, ArrowLeft, Plus, Minus, CreditCard, Loader2 } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Plus, Minus, CreditCard, Loader2, Navigation, Clock } from 'lucide-react';
 
 export default function OrderCheckout() {
   const { id } = useParams();
@@ -10,6 +10,14 @@ export default function OrderCheckout() {
   const [menu, setMenu] = useState([]);
   const [cart, setCart] = useState({});
   const [loading, setLoading] = useState(true);
+  
+  const [distance, setDistance] = useState(3.5);
+  const [time, setTime] = useState(20);
+  const [totalCost, setTotalCost] = useState(0);
+
+  const token = localStorage.getItem('token');
+  const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
+  const userId = decodedToken?.userId;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,6 +38,35 @@ export default function OrderCheckout() {
     fetchData();
   }, [id]);
 
+  useEffect(() => {
+    // Dynamically calculate the precise price + delivery via the API!
+    const calculateTotal = async () => {
+      const itemsList = [];
+      Object.entries(cart).forEach(([itemId, qty]) => {
+        for (let i = 0; i < qty; i++) itemsList.push(parseInt(itemId));
+      });
+
+      if (itemsList.length === 0) {
+        setTotalCost(0);
+        return;
+      }
+
+      try {
+        const res = await api.post('/orders/calculate-total-cost', {
+          item_ids: itemsList,
+          distance_km: distance || 0.1,
+          time_minutes: time || 1
+        });
+        setTotalCost(res.data.total_order_cost);
+      } catch (err) {
+        console.error("Failed to calculate total cost via API");
+      }
+    };
+
+    const timer = setTimeout(calculateTotal, 300); // debounce API calls
+    return () => clearTimeout(timer);
+  }, [cart, distance, time]);
+
   const updateCart = (itemId, delta) => {
     setCart(prev => {
       const q = (prev[itemId] || 0) + delta;
@@ -40,13 +77,6 @@ export default function OrderCheckout() {
       }
       return { ...prev, [itemId]: q };
     });
-  };
-
-  const getSubtotal = () => {
-    return Object.entries(cart).reduce((sum, [itemId, qty]) => {
-      const item = menu.find(m => m.itemId === parseInt(itemId));
-      return sum + (item ? item.price * qty : 0);
-    }, 0);
   };
 
   if (loading) {
@@ -61,7 +91,7 @@ export default function OrderCheckout() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
         <h2 className="text-2xl font-bold mb-4">Restaurant Not Found</h2>
-        <button onClick={() => navigate('/')} className="bg-blue-600 text-white px-6 py-2 rounded-full">
+        <button onClick={() => navigate('/')} className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold">
           Back to Home
         </button>
       </div>
@@ -69,6 +99,12 @@ export default function OrderCheckout() {
   }
 
   const handleCheckout = async () => {
+    if (!token) {
+       alert("Please login before placing an order.");
+       navigate('/login');
+       return;
+    }
+
     const itemsList = [];
     Object.entries(cart).forEach(([itemId, qty]) => {
       for (let i = 0; i < qty; i++) itemsList.push(parseInt(itemId));
@@ -76,16 +112,16 @@ export default function OrderCheckout() {
 
     try {
       const payload = {
-        user_id: 4, // hardcoded test user for now until PR 5 Auth is built
+        user_id: userId,
         restaurant_id: parseInt(id),
         items: itemsList,
-        distance_km: 3.5,
-        time_minutes: 25
+        distance_km: distance || 0.1,
+        time_minutes: time || 1
       };
 
       const res = await api.post('/orders/', payload);
       setCart({});
-      navigate(`/payment/${res.data.orderId}`, { state: { amount: getSubtotal() } });
+      navigate(`/payment/${res.data.orderId}`, { state: { amount: totalCost } });
     } catch (err) {
       console.error("Order failed", err);
       alert("Failed to submit order.");
@@ -114,19 +150,19 @@ export default function OrderCheckout() {
 
             <div className="space-y-4">
               {menu.map(item => (
-                <div key={item.itemId} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200">
+                <div key={item.itemId} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-200 gap-4">
                   <div>
                     <h4 className="font-bold text-gray-900 text-lg">{item.name}</h4>
                     <p className="text-sm text-gray-500 line-clamp-1">{item.description}</p>
                     <p className="font-bold text-green-600 mt-1">${item.price.toFixed(2)}</p>
                   </div>
                   
-                  <div className="flex items-center space-x-4 bg-white p-2 rounded-xl shadow-sm border border-gray-100">
-                    <button onClick={() => updateCart(item.itemId, -1)} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+                  <div className="flex items-center space-x-4 bg-white p-2 rounded-xl shadow-sm border border-gray-100 self-start sm:self-auto shrink-0">
+                    <button onClick={() => updateCart(item.itemId, -1)} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
                       <Minus className="w-5 h-5" />
                     </button>
-                    <span className="font-bold w-4 text-center">{cart[item.itemId] || 0}</span>
-                    <button onClick={() => updateCart(item.itemId, 1)} className="p-1 rounded-lg hover:bg-blue-50 text-blue-600">
+                    <span className="font-bold w-6 text-center">{cart[item.itemId] || 0}</span>
+                    <button onClick={() => updateCart(item.itemId, 1)} className="p-1 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors">
                       <Plus className="w-5 h-5" />
                     </button>
                   </div>
@@ -135,45 +171,75 @@ export default function OrderCheckout() {
 
               {menu.length === 0 && (
                 <div className="p-8 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                   <p className="text-gray-500">This restaurant has no active menu items.</p>
+                   <p className="text-gray-500 font-medium">This restaurant has no active menu items.</p>
                 </div>
               )}
             </div>
           </div>
 
           {/* Cart Section */}
-          <div className="md:w-1/3 bg-gray-900 text-white p-8 flex flex-col">
+          <div className="md:w-1/3 bg-gray-900 text-white p-8 flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-10 rounded-bl-[100px] pointer-events-none" />
             <h2 className="text-2xl font-bold mb-6">Your Order</h2>
             
-            <div className="flex-1 space-y-4 overflow-y-auto mb-6">
+            <div className="flex-1 space-y-4 overflow-y-auto mb-6 relative z-10">
               {Object.keys(cart).length === 0 ? (
                 <p className="text-gray-400 italic">Your cart is empty.</p>
               ) : (
-                Object.entries(cart).map(([itemId, qty]) => {
-                  const item = menu.find(m => m.itemId === parseInt(itemId));
-                  if (!item) return null;
-                  return (
-                    <div key={itemId} className="flex justify-between items-center bg-gray-800 p-4 rounded-xl">
-                      <div>
-                        <p className="font-bold">{item.name}</p>
-                        <p className="text-xs text-gray-400">Qty: {qty}</p>
+                <>
+                  {Object.entries(cart).map(([itemId, qty]) => {
+                    const item = menu.find(m => m.itemId === parseInt(itemId));
+                    if (!item) return null;
+                    return (
+                      <div key={itemId} className="flex justify-between items-center bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                        <div>
+                          <p className="font-bold text-sm">{item.name}</p>
+                          <p className="text-xs text-gray-400">Qty: {qty}</p>
+                        </div>
+                        <p className="font-bold text-green-400 text-sm">${(item.price * qty).toFixed(2)}</p>
                       </div>
-                      <p className="font-bold text-green-400">${(item.price * qty).toFixed(2)}</p>
+                    )
+                  })}
+                  
+                  {/* Delivery Adjustments Input */}
+                  <div className="mt-8 bg-gray-800 p-5 rounded-2xl shadow-inner border border-gray-700">
+                    <h4 className="text-sm font-bold text-blue-400 uppercase tracking-widest mb-4">Delivery Route</h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="flex items-center text-xs font-bold text-gray-400 mb-1.5"><Navigation className="w-3 h-3 mr-1.5"/> Distance (km)</label>
+                        <input 
+                          type="number" min="0.1" step="0.1"
+                          value={distance} onChange={e => setDistance(parseFloat(e.target.value))}
+                          className="w-full bg-gray-900 text-white text-sm px-4 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center text-xs font-bold text-gray-400 mb-1.5"><Clock className="w-3 h-3 mr-1.5"/> ETA Config (mins)</label>
+                        <input 
+                          type="number" min="1" step="1"
+                          value={time} onChange={e => setTime(parseInt(e.target.value))}
+                          className="w-full bg-gray-900 text-white text-sm px-4 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
                     </div>
-                  )
-                })
+                  </div>
+                </>
               )}
             </div>
 
-            <div className="border-t border-gray-800 pt-6 mt-auto">
+            <div className="border-t border-gray-800 pt-6 mt-auto relative z-10">
               <div className="flex justify-between items-center mb-6">
-                <span className="text-gray-400 text-lg">Subtotal</span>
-                <span className="text-2xl font-bold">${getSubtotal().toFixed(2)}</span>
+                <span className="text-gray-400 text-lg">Total</span>
+                <div className="text-right">
+                  <span className="text-3xl font-black text-white">${totalCost.toFixed(2)}</span>
+                  <p className="text-xs text-blue-400 mt-1 font-medium select-none">API Price Engine</p>
+                </div>
               </div>
               <button 
                 onClick={handleCheckout}
                 disabled={Object.keys(cart).length === 0}
-                className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 disabled:border-transparent text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center transition-all shadow-lg hover:shadow-blue-500/20 border border-blue-500"
               >
                 Checkout <CreditCard className="w-5 h-5 ml-2" />
               </button>
