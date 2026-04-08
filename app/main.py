@@ -5,12 +5,12 @@ and creates the FastAPI app instance that Uvicorn runs
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import (
     user_controller, menu_controller, delivery_controller,
     order_controller, admin_controller, payment_controller
 )
 from app import database
-from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
