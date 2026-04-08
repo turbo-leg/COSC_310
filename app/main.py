@@ -10,6 +10,7 @@ from app.controllers import (
     order_controller, admin_controller, payment_controller
 )
 from app import database
+from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
@@ -22,6 +23,14 @@ async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In development, allow all. Vite usually runs on localhost:5173
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(user_controller.router)
 app.include_router(menu_controller.router)
