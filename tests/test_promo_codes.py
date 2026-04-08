@@ -1,5 +1,6 @@
-from fastapi.testclient import TestClient
+"""Tests for promo codes."""
 from datetime import datetime, timedelta
+from fastapi.testclient import TestClient
 
 from app.main import app
 from app import database

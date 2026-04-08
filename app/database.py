@@ -482,4 +482,3 @@ def mark_promo_used(code: str, user_id: int):
     """
     if code in promo_codes_map:
         promo_codes_map[code]["used_by"].append(user_id)
-

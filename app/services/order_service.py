@@ -180,7 +180,7 @@ def calculate_total_cost_of_order(item_ids: List[int], distance_km: float,
         # invalid code check
         if not promo:
             raise HTTPException(status_code=400, detail="Invalid promo code")
-        
+
         # expiry check
         if datetime.fromisoformat(promo["expiry"]) < datetime.now():
             raise HTTPException(status_code=400, detail="Promo code expired")
