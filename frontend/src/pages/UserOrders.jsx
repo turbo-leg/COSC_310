@@ -7,8 +7,10 @@ export default function UserOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  // Using user 4 as fallback mapping
-  const userId = localStorage.getItem('userId') || 4;
+  
+  const token = localStorage.getItem('token');
+  const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
+  const userId = decodedToken?.userId;
 
   useEffect(() => {
     fetchOrders();

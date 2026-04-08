@@ -34,7 +34,7 @@ const CheckoutPayment = () => {
 
       // 2. Update Order Status
       await api.patch(`/orders/${orderId}/payment`, {
-        status: 'PAID'
+        status: 'accepted'
       });
 
       setSuccess(true);

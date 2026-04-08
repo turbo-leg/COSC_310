@@ -21,13 +21,23 @@ export function Navbar({ token, setToken }) {
       <div className="flex gap-4">
         {!token ? (
           <Link to="/login">
-            <Button variant="outline">Login</Button>
+            <Button variant="default">Login</Button>
           </Link>
         ) : (
           <>
+            {(userRole === 'customer' || userRole === 'regular_user') && (
+              <Link to="/orders">
+                <Button variant="outline">My Orders</Button>
+              </Link>
+            )}
+            {userRole === 'restaurant' && (
+              <Link to="/restaurant-orders">
+                <Button variant="outline" className="border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100">Restaurant Queue</Button>
+              </Link>
+            )}
             {userRole === 'admin' && (
               <Link to="/admin">
-                <Button variant="secondary">Admin Dashboard</Button>
+                <Button variant="secondary">Admin UI</Button>
               </Link>
             )}
             <Button variant="destructive" onClick={handleLogout}>

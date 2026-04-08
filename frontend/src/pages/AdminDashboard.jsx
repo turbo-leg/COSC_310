@@ -11,8 +11,10 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      // Assuming admin userId is available in context/localstorage
-      const userId = localStorage.getItem('userId') || 3; // fallback for testing (3 is Admin in users.csv)
+      const token = localStorage.getItem('token');
+      const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      const userId = decodedToken?.userId;
+      
       const res = await api.get(`/admin/stats?user_id=${userId}`);
       setStats(res.data);
     } catch (err) {

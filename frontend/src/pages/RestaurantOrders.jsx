@@ -7,8 +7,9 @@ export default function RestaurantOrders() {
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   
-  // Use restaurant fallback (e.g. 1 for Restaurant 1)
-  const restaurantId = localStorage.getItem('restaurantId') || localStorage.getItem('userId') || 1;
+  const token = localStorage.getItem('token');
+  const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
+  const restaurantId = decodedToken?.restaurantId;
 
   const fetchData = async () => {
     try {
