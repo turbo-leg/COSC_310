@@ -38,7 +38,10 @@ function App() {
             <Route path="/restaurant/:id" element={<OrderCheckout />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/payment/:orderId" element={<CheckoutPayment />} />
-            <Route path="/orders" element={<UserOrders />} />
+            <Route
+              path="/orders"
+              element={token ? <UserOrders /> : <Navigate to="/login" replace />}
+            />
             <Route path="/restaurant-orders" element={<RestaurantOrders />} />
             <Route path="/menu-manager" element={<RestaurantMenuManager />} />
             <Route path="/order/:id/track" element={<OrderTracker />} />

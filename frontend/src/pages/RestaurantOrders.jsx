@@ -8,18 +8,47 @@ export default function RestaurantOrders() {
   const [loading, setLoading] = useState(true);
   
   const token = localStorage.getItem('token');
-  const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
-  const restaurantId = decodedToken?.restaurantId;
+  let decodedToken = null;
+  if (token) {
+    try {
+      decodedToken = JSON.parse(atob(token.split('.')[1]));
+    } catch {
+      decodedToken = null;
+    }
+  }
+  // Backend treats missing restaurantId as userId for owners; path must be the venue id.
+  const restaurantIdForOrders =
+    decodedToken?.restaurantId != null && decodedToken.restaurantId !== ''
+      ? Number(decodedToken.restaurantId)
+      : decodedToken?.userId != null
+        ? Number(decodedToken.userId)
+        : null;
+  // Revenue endpoint expects user_id = owner account id in the database.
+  const ownerUserId =
+    decodedToken?.userId != null ? Number(decodedToken.userId) : null;
 
   const fetchData = async () => {
+    if (restaurantIdForOrders == null || Number.isNaN(restaurantIdForOrders)) {
+      setOrders([]);
+      setRevenue(0);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const [ordRes, revRes] = await Promise.all([
-        api.get(`/orders/restaurants/${restaurantId}/orders`),
-        api.get(`/orders/restaurants/${restaurantId}/revenue?user_id=${restaurantId}`)
-      ]);
+      const ordersUrl = `/orders/restaurants/${restaurantIdForOrders}/orders`;
+      const revUrl =
+        ownerUserId != null && !Number.isNaN(ownerUserId)
+          ? `/orders/restaurants/${restaurantIdForOrders}/revenue?user_id=${ownerUserId}`
+          : null;
+      const ordRes = await api.get(ordersUrl);
       setOrders(ordRes.data.reverse());
-      setRevenue(revRes.data.total_revenue || 0);
+      if (revUrl) {
+        const revRes = await api.get(revUrl);
+        setRevenue(revRes.data.total_revenue || 0);
+      } else {
+        setRevenue(0);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -29,7 +58,7 @@ export default function RestaurantOrders() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [restaurantIdForOrders, ownerUserId]);
 
   const updateStatus = async (orderId, newStatus) => {
     try {
