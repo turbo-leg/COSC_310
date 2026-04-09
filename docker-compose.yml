@@ -12,6 +12,7 @@ services:
       - ./menu_items.csv:/code/menu_items.csv
     environment:
       - PYTHONUNBUFFERED=1
+      - TZ=Etc/GMT+7
 
   frontend:
     build: ./frontend

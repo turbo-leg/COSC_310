@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Cat, Moon, Sun } from 'lucide-react';
 
 export function Navbar({ token, setToken, toggleTheme, isDarkMode }) {
@@ -24,6 +24,7 @@ export function Navbar({ token, setToken, toggleTheme, isDarkMode }) {
   const normalizedRole = userRole
     ? String(userRole).toLowerCase().replace(/\s+/g, '_')
     : null;
+  const canUseWallet = normalizedRole === 'customer' || normalizedRole === 'regular_user';
 
   return (
     <nav className="border-b p-4 bg-background shadow-sm flex justify-between items-center transition-colors duration-300">
@@ -49,6 +50,11 @@ export function Navbar({ token, setToken, toggleTheme, isDarkMode }) {
           </>
         ) : (
           <>
+            {canUseWallet && (
+              <Link to="/wallet" className={buttonVariants({ variant: 'outline' })}>
+                Wallet
+              </Link>
+            )}
             {normalizedRole === 'restaurant' && (
               <>
                 <Link to="/menu-manager">
