@@ -24,6 +24,7 @@ export function Navbar({ token, setToken, toggleTheme, isDarkMode }) {
   const normalizedRole = userRole
     ? String(userRole).toLowerCase().replace(/\s+/g, '_')
     : null;
+  const canUseWallet = normalizedRole === 'customer' || normalizedRole === 'regular_user';
 
   return (
     <nav className="border-b p-4 bg-background shadow-sm flex justify-between items-center transition-colors duration-300">
@@ -49,6 +50,11 @@ export function Navbar({ token, setToken, toggleTheme, isDarkMode }) {
           </>
         ) : (
           <>
+            {canUseWallet && (
+              <Link to="/wallet">
+                <Button variant="outline">Wallet</Button>
+              </Link>
+            )}
             {normalizedRole === 'restaurant' && (
               <>
                 <Link to="/menu-manager">
