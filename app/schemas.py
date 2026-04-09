@@ -5,7 +5,7 @@ they separate API contracts from database models for flexibility
 """
 from typing import List
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
-from app.constants import UserRole, OrderStatus
+from app.constants import UserRole, OrderStatus, RefundReason, RefundStatus
 
 
 class AdminStatsResponse(BaseModel):
@@ -152,6 +152,37 @@ class UpdateOrderStatusRequest(BaseModel):
     Schema for updating order status.
     """
     new_status: str
+
+
+class RefundCreateRequest(BaseModel):
+    """
+    Schema for creating a refund request.
+    """
+    user_id: int
+    reason: RefundReason
+    description: str = Field(..., min_length=10, max_length=500)
+
+
+class RefundResponse(BaseModel):
+    """
+    Schema for refund request response.
+    """
+    refundId: int
+    orderId: int
+    userId: int
+    reason: str
+    description: str
+    status: RefundStatus
+    createdAt: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RefundUpdateRequest(BaseModel):
+    """
+    Schema for admin to approve or deny a refund.
+    """
+    status: RefundStatus
 
 
 class UserBase(BaseModel):
