@@ -86,7 +86,7 @@ const CheckoutPayment = () => {
       setTimeout(() => {
         navigate('/orders'); // Redirect to user's orders later
       }, 3000);
-      
+
     } catch (err) {
       setError(err.response?.data?.detail || 'Payment processing failed. Please try again.');
     } finally {
@@ -119,8 +119,8 @@ const CheckoutPayment = () => {
 
       {currentAmountDue > 0 && (
         <div className="bg-muted text-muted-foreground rounded-2xl p-6 mb-8 flex justify-between items-center border border-border/60">
-          <span className="text-muted-foreground font-medium">Total Amount Due</span>
-          <span className="text-3xl font-bold text-foreground">${currentAmountDue.toFixed(2)}</span>
+          <span className="text-muted-foreground font-medium">Total Amount Due {appliedPromo ? `(Promo: ${appliedPromo})` : ''}</span>
+          <span className="text-3xl font-bold text-foreground">${amount.toFixed(2)}</span>
         </div>
       )}
 
@@ -189,8 +189,8 @@ const CheckoutPayment = () => {
           type="submit"
           disabled={loading}
           className={`w-full py-4 px-6 rounded-2xl text-primary-foreground font-bold text-lg transition-all shadow-md hover:shadow-xl flex justify-center items-center gap-2
-            ${loading 
-              ? 'bg-accent/80 text-accent-foreground cursor-not-allowed text-muted-foreground' 
+            ${loading || creditCard.length < 16
+              ? 'bg-accent/80 text-accent-foreground cursor-not-allowed text-muted-foreground'
               : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5'
             }`}
         >
