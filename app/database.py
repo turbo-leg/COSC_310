@@ -14,6 +14,7 @@ users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
 orders_map: Dict[int, dict] = {}
 refunds_map: Dict[int, dict] = {}
+promo_codes_map: Dict[str, dict] = {}
 Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
@@ -143,13 +144,13 @@ def create_user(
     """
     global NEXT_ID # pylint: disable=global-statement
     new_user = {
-      "userId": NEXT_ID,
-      "name": name,
-      "email": email,
-      "password": password,
-      "role": role,
-      "restaurantId": restaurant_id
-   }
+        "userId": NEXT_ID,
+        "name": name,
+        "email": email,
+        "password": password,
+        "role": role,
+        "restaurantId": restaurant_id
+    }
     users_map[NEXT_ID] = new_user
     NEXT_ID += 1
     save_users_to_csv()
@@ -482,9 +483,7 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
 
 
 def create_refund(order_id: int, user_id: int, reason: str, description: str) -> dict:
-    """
-    Creates a new refund request stored in memory.
-    """
+    """Creates a new refund request stored in memory."""
     global NEXT_REFUND_ID  # pylint: disable=global-statement
     new_refund = {
         "refundId": NEXT_REFUND_ID,
@@ -501,9 +500,7 @@ def create_refund(order_id: int, user_id: int, reason: str, description: str) ->
 
 
 def get_refund_by_order_id(order_id: int) -> Optional[dict]:
-    """
-    Returns the refund request for a given order, if any.
-    """
+    """Returns the refund request for a given order, if any."""
     for refund in refunds_map.values():
         if refund.get("orderId") == order_id:
             return refund
@@ -511,25 +508,47 @@ def get_refund_by_order_id(order_id: int) -> Optional[dict]:
 
 
 def get_all_refunds() -> List[dict]:
-    """
-    Returns all refund requests in memory.
-    """
+    """Returns all refund requests in memory."""
     return list(refunds_map.values())
 
 
 def get_refunds_for_user(user_id: int) -> List[dict]:
-    """
-    Returns all refund requests submitted by a specific user.
-    """
+    """Returns all refund requests submitted by a specific user."""
     return [r for r in refunds_map.values() if r.get("userId") == user_id]
 
 
 def update_refund_status(refund_id: int, new_status: str) -> Optional[dict]:
-    """
-    Updates the status of a refund request (approved or denied).
-    """
+    """Updates the status of a refund request (approved or denied)."""
     refund = refunds_map.get(refund_id)
     if not refund:
         return None
     refund["status"] = new_status
     return refund
+
+
+def create_promo_code(
+    code: str,
+    discount: float,
+    expiry: str,
+    assigned_users: list | None,
+) -> dict:
+    """Creates the promo code with parameters to ensure code is used once."""
+    promo_codes_map[code] = {
+        "code": code,
+        "discount": discount,
+        "expiry": expiry,
+        "assigned_users": assigned_users,
+        "used_by": [],
+    }
+    return promo_codes_map[code]
+
+
+def get_promo_code(code: str) -> Optional[dict]:
+    """Find promo code to check if it matches user input."""
+    return promo_codes_map.get(code)
+
+
+def mark_promo_used(code: str, user_id: int) -> None:
+    """Mark promo code as used so user doesn't use it more than once."""
+    if code in promo_codes_map:
+        promo_codes_map[code]["used_by"].append(user_id)

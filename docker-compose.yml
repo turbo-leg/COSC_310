@@ -12,3 +12,10 @@ services:
       - ./menu_items.csv:/code/menu_items.csv
     environment:
       - PYTHONUNBUFFERED=1
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api

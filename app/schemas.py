@@ -211,3 +211,20 @@ class UserResponse(UserBase):
     role: UserRole
 
     model_config = ConfigDict(from_attributes=True)
+
+class PromoCreateRequest(BaseModel):
+    """
+    Schema for creating promo request
+    """
+    code: str
+    discount: float
+    expiry: str
+    assigned_users: List[int] | None = None
+
+
+class ApplyPromoRequest(BaseModel):
+    """
+    Schema for applying promo request
+    """
+    code: str
+    user_id: int
