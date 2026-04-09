@@ -30,7 +30,7 @@ export default function Login({ setToken }) {
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center p-4 bg-zinc-50">
+    <div className="flex h-screen w-full items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-sm">
         <form onSubmit={handleLogin}>
           <CardHeader className="space-y-1">
