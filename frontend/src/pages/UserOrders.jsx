@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { Package, Clock, XCircle, ArrowRight, RotateCcw, X } from 'lucide-react';
+import { Package, Clock, XCircle, ArrowRight, RotateCcw, X, Bell } from 'lucide-react';
 
 const REFUND_REASONS = [
   { value: 'never_arrived', label: 'Order never arrived' },
@@ -20,6 +20,7 @@ export default function UserOrders() {
   const [refundDescription, setRefundDescription] = useState('');
   const [refundError, setRefundError] = useState('');
   const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [dismissedNotifications, setDismissedNotifications] = useState([]);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
@@ -113,6 +114,20 @@ export default function UserOrders() {
     order.payment_status?.toLowerCase() === 'accepted' &&
     !refundsByOrder[order.orderId];
 
+  const statusNotifications = orders
+    .filter(order => order.customerNotified && order.latestNotification)
+    .map(order => {
+      const notification = order.latestNotification;
+      const id = `${order.orderId}-${notification.sentAt || notification.newStatus || 'status'}`;
+      return {
+        id,
+        orderId: order.orderId,
+        message: notification.message || `Order #${order.orderId} status changed to ${order.status}`,
+        sentAt: notification.sentAt,
+      };
+    })
+    .filter(notification => !dismissedNotifications.includes(notification.id));
+
   const getRefundBadge = (orderId) => {
     const refund = refundsByOrder[orderId];
     if (!refund) return null;
@@ -148,6 +163,38 @@ export default function UserOrders() {
           <p className="text-muted-foreground">Track and manage your recent meal requests.</p>
         </div>
       </div>
+
+      {statusNotifications.length > 0 && (
+        <div className="space-y-3 mb-8">
+          {statusNotifications.map(notification => (
+            <div
+              key={notification.id}
+              className="flex items-start justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3"
+            >
+              <div className="flex items-start gap-3">
+                <Bell className="w-5 h-5 text-emerald-700 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-emerald-800">Status Update</p>
+                  <p className="text-sm text-emerald-700">{notification.message}</p>
+                  {notification.sentAt && (
+                    <p className="text-xs text-emerald-600 mt-1">
+                      {new Date(notification.sentAt).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="text-emerald-700 hover:text-emerald-900"
+                onClick={() => setDismissedNotifications(prev => [...prev, notification.id])}
+                aria-label="Dismiss notification"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-4 animate-pulse">
@@ -219,12 +266,6 @@ export default function UserOrders() {
                         state: { amount: order.amount_due ?? order.order_value },
                       })
                     }
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition border border-green-200"
-                  >
-                    Make Payment <ArrowRight className="w-4 h-4" />
-                  </button>
-                )}
-
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition border border-green-200"
                   >
                     Make Payment <ArrowRight className="w-4 h-4" />

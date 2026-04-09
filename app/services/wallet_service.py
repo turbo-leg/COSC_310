@@ -28,9 +28,18 @@ def _ensure_customer(user: dict) -> dict:
     return user
 
 
-def top_up_wallet(user: dict, amount: float) -> dict:
+def _validate_credit_card(credit_card: str) -> str:
+    """Validate the simulated card number used for top-ups."""
+    card = (credit_card or "").strip()
+    if len(card) != 16 or not card.isdigit():
+        raise HTTPException(status_code=400, detail="Card is invalid, must be 16 digits")
+    return card
+
+
+def top_up_wallet(user: dict, amount: float, credit_card: str) -> dict:
     """Add money to the authenticated customer's wallet."""
     customer = _ensure_customer(user)
+    _validate_credit_card(credit_card)
 
     if amount <= 0:
         raise HTTPException(status_code=400, detail="Top-up amount must be positive")
