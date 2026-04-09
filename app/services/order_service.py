@@ -161,7 +161,8 @@ handles the logic for orders/checkout total.
 
 
 def calculate_total_cost_of_order(item_ids: List[int], distance_km: float,
-                                  time_minutes: int) -> float:
+    time_minutes: int, promo_code: str | None = None,
+    user_id: int | None = None) -> float:
     """
     Calculates the total cost of the order (total food price + delivery fee).
     """
@@ -176,4 +177,35 @@ def calculate_total_cost_of_order(item_ids: List[int], distance_km: float,
             food_total += item.get("price", 0.0)
     delivery_fee = calculate_delivery_cost(distance_km, time_minutes)
     total_cost = food_total + delivery_fee
+
+    # apply promo conditional
+    if promo_code:
+        promo = database.get_promo_code(promo_code)
+
+        # invalid code check
+        if not promo:
+            raise HTTPException(status_code=400, detail="Invalid promo code")
+
+        # expiry check
+        if datetime.fromisoformat(promo["expiry"]) < datetime.now():
+            raise HTTPException(status_code=400, detail="Promo code expired")
+
+        # assigned user check
+        if promo["assigned_users"] is not None:
+            if user_id is None or user_id not in promo["assigned_users"]:
+                raise HTTPException(status_code=403, detail="Promo not assigned to user")
+
+        # already used check
+        if user_id in promo["used_by"]:
+            raise HTTPException(status_code=400, detail="Promo already used")
+
+        # apply discount
+        total_cost -= promo["discount"]
+
+        # prevent negative
+        total_cost = max(total_cost, 0)
+
+        # mark used
+        database.mark_promo_used(promo_code, user_id)
+
     return round(total_cost, 2)
