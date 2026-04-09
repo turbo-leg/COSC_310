@@ -69,10 +69,10 @@ const AdminDashboard = () => {
   };
 
   const StatCard = ({ title, value, icon, colorClass }) => (
-    <div className="bg-white/80 backdrop-blur-xl border border-gray-200/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+    <div className="bg-card text-card-foreground/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
           <h3 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">{value}</h3>
         </div>
         <div className={`p-4 rounded-xl ${colorClass}`}>
@@ -83,13 +83,20 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="min-h-screen bg-muted text-muted-foreground/50 p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-500 mt-2">Manage the platform and view system statistics.</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-2">Manage the platform and view system statistics.</p>
         </div>
-        <button onClick={() => { fetchStats(); fetchRefunds(); }} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium">
+        <button
+          type="button"
+          onClick={() => {
+            fetchStats();
+            fetchRefunds();
+          }}
+          className="px-4 py-2 bg-card text-card-foreground border border-border rounded-lg hover:bg-muted transition-colors shadow-sm font-medium"
+        >
           Refresh Stats
         </button>
       </div>
@@ -104,7 +111,7 @@ const AdminDashboard = () => {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-2xl"></div>
+            <div key={i} className="h-32 bg-accent text-accent-foreground rounded-2xl"></div>
           ))}
         </div>
       ) : stats ? (
@@ -113,7 +120,7 @@ const AdminDashboard = () => {
             title="Total Users"
             value={stats.total_users || 0}
             icon={<Users className="w-6 h-6 text-blue-600" />}
-            colorClass="bg-blue-100"
+            colorClass="bg-secondary/20"
           />
           <StatCard
             title="Total Restaurants"
@@ -131,21 +138,21 @@ const AdminDashboard = () => {
             title="System Active"
             value="100%"
             icon={<Activity className="w-6 h-6 text-orange-600" />}
-            colorClass="bg-orange-100"
+            colorClass="bg-accent/20"
           />
         </div>
       ) : null}
 
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-200/60 overflow-hidden">
-        <div className="border-b border-gray-100 bg-gray-50/50 p-6 flex items-center justify-between">
+      <div className="bg-card text-card-foreground rounded-3xl shadow-sm border border-border/60 overflow-hidden">
+        <div className="border-b border-border bg-muted/50 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <RotateCcw className="w-5 h-5 text-amber-500" />
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Refund Requests</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Review and resolve customer refund requests.</p>
+              <h2 className="text-xl font-bold text-foreground">Refund Requests</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Review and resolve customer refund requests.</p>
             </div>
           </div>
-          <button onClick={fetchRefunds} className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">Refresh</button>
+          <button type="button" onClick={fetchRefunds} className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">Refresh</button>
         </div>
         <div className="p-6">
           {refundsError && (
@@ -156,41 +163,43 @@ const AdminDashboard = () => {
           )}
           {refundsLoading ? (
             <div className="space-y-3 animate-pulse">
-              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-gray-100 rounded-xl"></div>)}
+              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-muted rounded-xl"></div>)}
             </div>
           ) : refunds.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 font-medium">No refund requests yet.</div>
+            <div className="text-center py-12 text-muted-foreground font-medium">No refund requests yet.</div>
           ) : (
             <div className="space-y-4">
               {refunds.map(refund => (
-                <div key={refund.refundId} className="border border-gray-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-sm transition">
+                <div key={refund.refundId} className="border border-border rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-sm transition">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-gray-900">Refund #{refund.refundId}</span>
-                      <span className="text-sm text-gray-500">&mdash; Order #{refund.orderId}</span>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="font-bold text-foreground">Refund #{refund.refundId}</span>
+                      <span className="text-sm text-muted-foreground">&mdash; Order #{refund.orderId}</span>
                       <span className={`px-3 py-0.5 rounded-full text-xs font-bold uppercase border ${getRefundStatusStyle(refund.status)}`}>
                         {refund.status}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-semibold">Reason:</span> {REASON_LABELS[refund.reason] || refund.reason}
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">Reason:</span> {REASON_LABELS[refund.reason] || refund.reason}
                     </p>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-semibold">Description:</span> {refund.description}
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">Description:</span> {refund.description}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground/80">
                       Submitted: {new Date(refund.createdAt).toLocaleString()} &bull; User ID: {refund.userId}
                     </p>
                   </div>
                   {refund.status === 'pending' && (
                     <div className="flex gap-3 shrink-0">
                       <button
+                        type="button"
                         onClick={() => handleRefundDecision(refund.refundId, 'approved')}
                         className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition text-sm"
                       >
                         <CheckCircle className="w-4 h-4" /> Approve
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleRefundDecision(refund.refundId, 'denied')}
                         className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition border border-red-200 text-sm"
                       >
@@ -205,10 +214,10 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="mt-4 bg-white rounded-3xl shadow-sm border border-gray-200/60 overflow-hidden">
-        <div className="border-b border-gray-100 bg-gray-50/50 p-6">
-          <h2 className="text-xl font-bold text-gray-900">User Management</h2>
-          <p className="text-sm text-gray-500 mt-1">Review and manage registered users.</p>
+      <div className="mt-12 bg-card text-card-foreground rounded-3xl shadow-sm border border-border/60 overflow-hidden">
+        <div className="border-b border-border bg-muted/50 p-6">
+          <h2 className="text-xl font-bold text-foreground">User Management</h2>
+          <p className="text-sm text-muted-foreground mt-1">Review and manage registered users.</p>
         </div>
         <div className="p-6">
           <AdminUserManagement />
