@@ -1,40 +1,202 @@
-# COSC_310 Project 
+Installation Instructions: Step-by-step setup procedures for running the system using Docker.
 
-#Overview
-This project currently contains the backend system for a food delivery app. The app has 8 core functionalities:
-- User Authentication
-- Menu Management
-- Search Functionality
-- Order Management
-- Delivery System
-- Order Tracking
-- Payment Processing
-- Notifications
+Dependencies: A complete list of required tools, libraries, and services (with version details).
 
+Maintenance Requirements: Details on ongoing maintenance, including:
 
-# Setup
-Clone the repo
-Run `docker-compose up --build -d`
-The API will be available at `http://localhost:8000`
-`http://localhost:8000/docs` is much easier to use Tobi highly recommends it
+Account credentials (if applicable)
 
-## API Endpoints
-GET /users - Get all users
-GET /users/{user_id} - Get a specific user
-POST /users - Create a new user
-DELETE /users/{user_id} - Delete a user
+Data management procedures
 
-## Database
-CSV file
+Configuration of external APIs or service
+do you see it now?
+Arpit — 11:48 PM
+@Univision did you start on this? or should I
+Sejal — 11:49 PM
+wait is it took late if i sent a small clip fo the promo amdin creation video, is the video done?
+Arpit — 11:49 PM
+traceabililty matrix looks good i can see it
+Yabuli — 11:49 PM
+ok good
+Arpit — 11:51 PM
+???
+Yabuli — 11:51 PM
+yeah send it over if we dont have time I'll submit the other video
+https://youtu.be/hyxv0Zf1EW8
+YouTube
+Yabuli
+Sphinxes - M4
+Image
+the video
+Arpit — 11:52 PM
+beautiful
+Yabuli — 11:52 PM
+got 6mins
+Arpit — 11:53 PM
+im creating this rn, not sure if turbileg did this
+Yabuli — 11:53 PM
+@Univision you got the docker images? they have to be included in submission
+Arpit — 11:53 PM
+# Deployment and Handover Guide
 
-## Reminders
-I added a comment at the top of every file to explain what it does. Read it and let me know if you have any questions
+## System Summary
+This repository contains a Dockerized FastAPI backend and a React/Vite frontend for a food delivery system. The backend loads application state from CSV files at startup and persists user changes back to `users.csv`.
 
-## Testing
-Testing is completed through `pytest `
-The CI pipeline uses both `pylint` and  `pytest`
+## Installation Instructions
 
-## Notes
-Testing reports/evidence are found in `/testing-documents`
-Scrum documents are found in `/scrum-documents`
+message.txt
+6 KB
+Sejal — 11:54 PM
+IF this works, htis is very last min
 
+Arpit — 11:54 PM
+AI-generated, gonna try updating this to sound less AI
+﻿
+# Deployment and Handover Guide
+
+## System Summary
+This repository contains a Dockerized FastAPI backend and a React/Vite frontend for a food delivery system. The backend loads application state from CSV files at startup and persists user changes back to `users.csv`.
+
+## Installation Instructions
+
+### 1. Install prerequisites
+Install the following on the machine that will run the system:
+- Docker Desktop or Docker Engine with Compose v2
+- Git
+
+### 2. Clone the repository
+```bash
+git clone https://github.com/turbo-leg/COSC_310.git
+cd COSC_310
+```
+
+### 3. Verify the seed data is present
+Make sure these files exist at the repository root:
+- `users.csv`
+- `menu_items.csv`
+
+These files are mounted into the backend container and are part of the runtime data store.
+
+### 4. Build and start the containers
+Run:
+```bash
+docker compose up -d --build api frontend
+```
+
+This starts:
+- Backend API on `http://localhost:8000`
+- Frontend on `http://localhost:5173`
+
+### 5. Confirm services are running
+Check the container status:
+```bash
+docker compose ps
+```
+
+### 6. Open the application
+- API docs: `http://localhost:8000/docs`
+- Frontend app: `http://localhost:5173`
+
+### 7. Stop the system
+```bash
+docker compose down
+```
+
+## Dependencies
+
+### System and runtime dependencies
+- Docker image for backend: `python:3.11-slim`
+- Docker image for frontend build: `node:20-alpine`
+- Docker image for frontend runtime: `nginx:alpine`
+- FastAPI served through Uvicorn
+- React app built with Vite
+
+### Backend Python dependencies
+From `requirements.txt`:
+- `fastapi==0.109.0`
+- `uvicorn[standard]==0.27.0`
+- `sqlalchemy==2.0.48`
+- `pwdlib[argon2]` - version not pinned in the file
+- `pytest==8.0.0`
+- `httpx==0.26.0`
+- `pydantic[email]` - version not pinned in the file
+- `pylint` - version not pinned in the file
+- `kagglehub` - version not pinned in the file
+- `uuid` - version not pinned in the file
+- `python-jose` - version not pinned in the file
+- `locust` - version not pinned in the file
+
+### Frontend JavaScript dependencies
+From `frontend/package.json`:
+- `react@19.2.4`
+- `react-dom@19.2.4`
+- `react-router-dom@7.14.0`
+- `axios@1.14.0`
+- `lucide-react@1.7.0`
+- `@base-ui/react@1.3.0`
+- `@fontsource-variable/geist@5.2.8`
+- `@radix-ui/react-icons@1.3.2`
+- `shadcn@4.2.0`
+- `tw-animate-css@1.4.0`
+
+Frontend development and test tooling:
+- `vite@8.0.4`
+- `vitest@4.1.3`
+- `eslint@9.39.4`
+- `@vitejs/plugin-react@6.0.1`
+- `@testing-library/react@16.3.2`
+- `@testing-library/jest-dom@6.9.1`
+- `@testing-library/user-event@14.6.1`
+- `jsdom@29.0.2`
+- `tailwindcss@3.4.19`
+- `postcss@8.5.9`
+- `autoprefixer@10.4.27`
+
+### Services and configuration used by the app
+- Docker Compose service `api` exposes port `8000`
+- Docker Compose service `frontend` exposes port `5173`
+- Backend timezone is set with `TZ=Etc/GMT+7`
+- Frontend API requests point to `http://localhost:8000`
+
+## Maintenance Requirements
+
+### Account credentials
+Seeded accounts are stored in `users.csv`. The current file includes these sample accounts:
+- `admin@email.com` - admin role
+- `user@email.com` - regular user role
+- `testuser@gmail.com` - customer role
+- `owner@email.com` - restaurant role
+- `restaurant1@email.com` - restaurant role
+
+Passwords are stored as Argon2 hashes in the CSV, so the plaintext seed password is not exposed in the file. If you need new credentials, create them through the API or update `users.csv` with a new hash generated by the authentication flow.
+
+The JWT signing secret is currently hardcoded in `app/token.py` as `secret123`. If that value changes, all existing tokens become invalid and the frontend must log in again.
+
+### Data management procedures
+- `users.csv` and `menu_items.csv` are the source of truth for startup data.
+- The backend loads both files during application startup.
+- User changes such as wallet balance updates and new users are persisted back to `users.csv`.
+- If you edit either CSV manually, restart the API container so the in-memory store reloads the data.
+- Keep backups of the CSV files before making manual edits.
+- If the container state ever looks stale, run `docker compose down` followed by `docker compose up -d --build api frontend`.
+
+### External APIs and service configuration
+There are no external third-party APIs configured in the current build.
+- Authentication uses the local JWT secret in `app/token.py`.
+- The frontend sends `Authorization: Bearer <token>` headers automatically through the shared Axios client.
+- CORS is currently open in development so the local frontend can talk to the local API.
+- No API keys or `.env` files are required for the current deployment path.
+
+### Ongoing maintenance tasks
+- Run `pytest` after backend changes.
+- Run `pylint` for backend code quality checks.
+- Run `npm run build` in `frontend/` or rebuild the frontend container after UI changes.
+- Rebuild the Docker images whenever dependencies change.
+- Update `users.csv` carefully because it is also the persisted backing store.
+
+## Operational Notes
+- The backend is intended to run inside Docker; the CSV files are mounted into the container.
+- The frontend is served by Nginx in its production container.
+- API documentation is available at `/docs` when the backend is running.
+message.txt
+6 KB
