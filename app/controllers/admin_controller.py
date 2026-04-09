@@ -2,7 +2,7 @@
 Controller for admin-specific endpoints.
 """
 
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Query, HTTPException
 from pydantic import BaseModel
 
@@ -16,6 +16,14 @@ class ToggleStockRequest(BaseModel):
     isActive: bool
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+@router.get("/menu", response_model=List[MenuItemResponse])
+def get_all_menu_items_admin(user_id: int):
+    """
+    Get all menu items for admin to manage stock.
+    """
+    require_admin(user_id)
+    return database.get_all_menu_items()
 
 @router.get("/stats", response_model=AdminStatsResponse)
 def get_admin_stats(

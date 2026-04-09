@@ -4,7 +4,7 @@ Handles order-related operations.
 
 from typing import List
 from datetime import datetime, timedelta
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from app import database, schemas
 from app.services.delivery_service import calculate_delivery_cost
 from app.constants import OrderStatus, PaymentStatus
@@ -45,6 +45,13 @@ class OrderService:
         """
         Places a new order in the system.
         """
+        for item_id in request.items:
+            item = database.get_menu_item_by_id(item_id)
+            if not item:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Menu item {item_id} not found.")
+            if not item.get("isActive", True):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Menu item {item_id} is currently out of stock.")
+
         return database.create_order(
             user_id=request.user_id,
             restaurant_id=request.restaurant_id,
