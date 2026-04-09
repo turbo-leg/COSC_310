@@ -27,6 +27,7 @@ class OrderStatus(str, Enum):
 class PaymentStatus(str, Enum):
     """Supported payment states."""
     UNPAID = "pending"
+    PARTIAL = "partial"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
 

@@ -210,10 +210,21 @@ export default function UserOrders() {
                     <XCircle className="w-4 h-4" /> Cancel
                   </button>
                 )}
-                {order.payment_status?.toLowerCase() === 'pending' && order.status !== 'cancelled' && (
+                {['pending', 'partial'].includes(order.payment_status?.toLowerCase()) &&
+                  order.status !== 'cancelled' && (
                   <button
                     type="button"
-                    onClick={() => navigate(`/payment/${order.orderId}`, { state: { amount: order.order_value } })}
+                    onClick={() =>
+                      navigate(`/payment/${order.orderId}`, {
+                        state: { amount: order.amount_due ?? order.order_value },
+                      })
+                    }
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition border border-green-200"
+                  >
+                    Make Payment <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
+
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition border border-green-200"
                   >
                     Make Payment <ArrowRight className="w-4 h-4" />

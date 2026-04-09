@@ -8,7 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import (
     user_controller, menu_controller, delivery_controller,
-    order_controller, admin_controller, payment_controller, refund_controller
+    order_controller, admin_controller, payment_controller, refund_controller, 
+    wallet_controller
 )
 from app import database
 
@@ -39,6 +40,7 @@ app.include_router(order_controller.router)
 app.include_router(admin_controller.router)
 app.include_router(payment_controller.router)
 app.include_router(refund_controller.router)
+app.include_router(wallet_controller.router)
 
 
 @app.get("/restaurants", response_model=list)

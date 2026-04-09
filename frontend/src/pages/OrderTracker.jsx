@@ -3,6 +3,58 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { Map, Clock, ArrowLeft, Package, CheckCircle, Truck, Utensils } from 'lucide-react';
 
+function formatEtaDisplay(estimatedArrivalTime, minutesRemaining) {
+  const date = new Date(estimatedArrivalTime);
+  const hasValidDate = !Number.isNaN(date.getTime());
+
+  const dayLabel = hasValidDate
+    ? date.toLocaleDateString([], {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    })
+    : 'Unknown day';
+
+  const timeLabel = hasValidDate
+    ? date.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+    : 'Unknown time';
+
+  const minutes = Number(minutesRemaining);
+  if (!Number.isFinite(minutes)) {
+    return {
+      etaText: `${dayLabel} at ${timeLabel}`,
+      relativeText: 'Arrival estimate unavailable',
+    };
+  }
+
+  if (minutes <= 0) {
+    return {
+      etaText: `${dayLabel} at ${timeLabel}`,
+      relativeText: 'Arriving now',
+    };
+  }
+
+  if (minutes < 60) {
+    return {
+      etaText: `${dayLabel} at ${timeLabel}`,
+      relativeText: `About ${minutes} minute${minutes === 1 ? '' : 's'} left`,
+    };
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  const hourLabel = `${hours} hour${hours === 1 ? '' : 's'}`;
+  const minuteLabel = remainingMinutes ? ` ${remainingMinutes} min` : '';
+
+  return {
+    etaText: `${dayLabel} at ${timeLabel}`,
+    relativeText: `About ${hourLabel}${minuteLabel} left`,
+  };
+}
+
 export default function OrderTracker() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -28,6 +80,7 @@ export default function OrderTracker() {
 
   const phases = ['pending', 'accepted', 'preparing', 'assigned', 'out-for-delivery', 'delivered'];
   const currentIndex = phases.indexOf(tracker.status.toLowerCase());
+  const eta = formatEtaDisplay(tracker.estimatedArrivalTime, tracker.minutesRemaining);
 
   return (
     <div className="max-w-3xl mx-auto p-6 md:p-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -36,13 +89,18 @@ export default function OrderTracker() {
       </button>
 
       <div className="bg-card text-card-foreground rounded-3xl shadow-sm border border-border overflow-hidden">
-         <div className="bg-primary text-primary-foreground text-primary-foreground p-8 border-b border-border">
+         <div className="bg-primary text-primary-foreground p-8 border-b border-border">
            <h1 className="text-3xl font-black mb-2 flex items-center gap-3">
-             <Map className="w-8 h-8 text-blue-400" /> Tracking Order #{tracker.orderId}
+             <Map className="w-8 h-8 text-primary-foreground" /> Tracking Order #{tracker.orderId}
            </h1>
-           <div className="flex flex-wrap items-center gap-4 text-muted-foreground font-medium">
-             <span className="flex items-center gap-1"><Clock className="w-5 h-5 text-muted-foreground"/> ETA: {tracker.estimatedArrivalTime}</span>
-             <span className="bg-primary text-primary-foreground/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{tracker.minutesRemaining} mins left</span>
+           <div className="flex flex-wrap items-center gap-4 text-primary-foreground font-medium">
+             <span className="flex items-center gap-1.5">
+               <Clock className="w-5 h-5 text-primary-foreground" />
+               ETA: {eta.etaText}
+             </span>
+             <span className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+               {eta.relativeText}
+             </span>
            </div>
          </div>
 
@@ -73,7 +131,7 @@ export default function OrderTracker() {
                        <h4 className={`text-lg font-bold ${isActive ? 'text-foreground' : isCompleted ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                          {phase.label}
                        </h4>
-                       {isActive && <div className="text-sm text-blue-600 font-bold bg-secondary/10 px-2 py-0.5 rounded-md inline-block mt-1">Current Status</div>}
+                       {isActive && <div className="text-sm text-secondary font-bold bg-secondary/10 px-2 py-0.5 rounded-md inline-block mt-1">Current Status</div>}
                      </div>
                    </div>
                  );

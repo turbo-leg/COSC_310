@@ -4,6 +4,7 @@ Password Hashing and authentication checks.
 
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
+from pwdlib.exceptions import UnknownHashError
 from app import database
 from app.token import create_token
 from app.constants import UserRole
@@ -28,7 +29,13 @@ class AuthService:
         user = database.get_user_by_email(email)
         if not user:
             return None
-        if self.password_hasher.verify(password, user["password"]):
+        try:
+            password_matches = self.password_hasher.verify(password, user["password"])
+        except UnknownHashError:
+            # Backward compatibility for legacy seed rows that stored plaintext values.
+            password_matches = password == user["password"]
+
+        if password_matches:
             return create_token(user)
         return None
 
