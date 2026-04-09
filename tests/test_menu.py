@@ -107,3 +107,40 @@ def test_remove_menu_item_success():
     assert response.status_code == 200
     resp = client.get("/restaurant/100/menu")
     assert resp.status_code in [200, 404]
+
+def test_get_restaurants_with_search():
+    """Test searching restaurants by display name or numeric id."""
+    database.menu_items = [
+        {
+            "itemId": 1, "restaurantId": 100, "name": "A", "description": "",
+            "price": 1.0, "isActive": True,
+        },
+        {
+            "itemId": 2, "restaurantId": 101, "name": "B", "description": "",
+            "price": 1.0, "isActive": True,
+        },
+    ]
+    response = client.get("/restaurants?query=100")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert data[0]["name"] == "Restaurant 100"
+
+def test_get_restaurants_without_search():
+    """Test listing all restaurants that have menu items."""
+    database.menu_items = [
+        {
+            "itemId": 1, "restaurantId": 100, "name": "A", "description": "",
+            "price": 1.0, "isActive": True,
+        },
+        {
+            "itemId": 2, "restaurantId": 101, "name": "B", "description": "",
+            "price": 1.0, "isActive": True,
+        },
+    ]
+    response = client.get("/restaurants")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    labels = {r["name"] for r in data}
+    assert labels == {"Restaurant 100", "Restaurant 101"}

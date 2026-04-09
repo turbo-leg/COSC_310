@@ -5,55 +5,134 @@ I am not sure where to find the csv file is so we might need to adjut the path.
 """
 import csv
 import datetime
-from typing import Dict, List
-import kagglehub
+from typing import Dict, List, Optional
 from sqlalchemy.orm import declarative_base
+from app.constants import OrderStatus, PaymentStatus, RefundStatus
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
 orders_map: Dict[int, dict] = {}
+refunds_map: Dict[int, dict] = {}
+promo_codes_map: Dict[str, dict] = {}
 Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
+NEXT_REFUND_ID: int = 1
 
+def _round_money(value: float) -> float:
+    """
+    Rounds a float to 2 decimal places, representing money.
+    """
+    return round(value, 2)
 
-def load_users_from_csv():
+def load_users_from_csv() -> None:
     """
     Todo: Load users from CSV into the in-memory map
     """
+    global users_map, NEXT_ID  # pylint: disable=global-statement
+
+    users_map = {}
+
+    try:
+        with open(CSV_FILE_PATH, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+
+            for row in reader:
+                user_id = int(row["userId"])
+                row["userId"] = user_id
+                row["walletBalance"] = _round_money(float(row.get("walletBalance", 0.0)))
+                restaurant_id_raw = row.get("restaurantId")
+                if restaurant_id_raw in (None, ""):
+                    # Back-compat: historically restaurant owners used userId as restaurant_id
+                    row["restaurantId"] = user_id if row.get("role") == "restaurant" else None
+                else:
+                    row["restaurantId"] = int(restaurant_id_raw)
+                users_map[user_id] = row
+
+            if users_map:
+                NEXT_ID = max(users_map.keys()) + 1
+            else:
+                NEXT_ID = 1
+
+    except FileNotFoundError:
+        users_map = {}
+        NEXT_ID = 1
 
 def save_users_to_csv():
     """
     Saves all user data into a permanent CSV file.
     """
     with open(CSV_FILE_PATH, mode = 'w', newline = '', encoding= 'utf-8') as file:
-        field_names = ["userId", "name", "email", "password", "role"]
+        field_names = [
+            "userId", "name", "email", "password", "role", "walletBalance", "restaurantId"
+        ]
         writer = csv.DictWriter(file, fieldnames = field_names)
         writer.writeheader()
         for user in users_map.values():
-            writer.writerow(user)
+            row = dict(user)
+            row["walletBalance"] = _round_money(row.get("walletBalance", 0.0))
+            if row.get("restaurantId") is None:
+                row["restaurantId"] = ""
+            writer.writerow(row)
 
-def init_storage():
+def init_storage() -> None:
     """
     Todo: Initialize storage by loading users from CSV
     """
+    load_users_from_csv()
     load_menu_items_from_csv()
 
-def get_all_users(skip: int = 0, limit: int = 100):
+def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
     """
     Todo: Return a list of users
     """
-    _ = skip
-    _= limit
+    return list(users_map.values())[skip : skip + limit]
 
-def get_user_by_id(user_id: int):
+def get_all_restaurants(skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Returns one row per distinct restaurant that appears in menu data.
+    Display name is Restaurant {id} (not tied to owner user display names).
+    userId mirrors restaurantId for routes that still use /restaurant/{id}.
+    """
+    restaurant_ids = sorted(
+        {
+            int(item["restaurantId"])
+            for item in menu_items
+            if item.get("restaurantId") is not None
+        }
+    )
+    restaurants = [
+        {
+            "restaurantId": rid,
+            "userId": rid,
+            "name": f"Restaurant {rid}",
+            "role": "restaurant",
+        }
+        for rid in restaurant_ids
+    ]
+    return restaurants[skip : skip + limit]
+
+def search_restaurants_by_name(query: str, skip: int = 0, limit: int = 100) -> List[dict]:
+    """
+    Returns menu-derived restaurants whose display name or id matches the query.
+    """
+    q = query.strip().lower()
+    all_rows = get_all_restaurants(skip=0, limit=10000)
+    restaurants = [
+        r for r in all_rows
+        if q in r.get("name", "").lower()
+        or q in str(r.get("restaurantId", ""))
+    ]
+    return restaurants[skip : skip + limit]
+
+def get_user_by_id(user_id: int) -> Optional[dict]:
     """
     Quickly finds a user with their id number.
     """
     return users_map.get(user_id)
 
-def get_user_by_email(email: str):
+def get_user_by_email(email: str) -> Optional[dict]:
     """
     Lookup user by email
     """
@@ -62,84 +141,147 @@ def get_user_by_email(email: str):
             return user
     return None
 
-def create_user(name: str, email: str, password:str, role:str):
+def create_user(
+    name: str,
+    email: str,
+    password: str,
+    role: str,
+    restaurant_id: int | None = None
+) -> dict:
     """
     Creates a new user and add it to the csv file using save_users_to_csv
     """
     global NEXT_ID # pylint: disable=global-statement
     new_user = {
-      "userId": NEXT_ID,
-      "name": name,
-      "email": email,
-      "password": password,
-      "role": role
-   }
+        "userId": NEXT_ID,
+        "name": name,
+        "email": email,
+        "password": password,
+        "role": role,
+        "walletBalance": 0.0,
+        "restaurantId": restaurant_id
+    }
     users_map[NEXT_ID] = new_user
     NEXT_ID += 1
     save_users_to_csv()
     return new_user
 
-def delete_user(user_id: int):
+def get_restaurant_owner(restaurant_id: int) -> Optional[dict]:
     """
-    Todo: Delete a user by ID
+    Returns the restaurant owner for a restaurant_id, if any.
     """
-    _ = user_id
+    for user in users_map.values():
+        if user.get("role") == "restaurant" and user.get("restaurantId") == restaurant_id:
+            return user
+    return None
 
+def delete_user(user_id: int) -> bool:
+    """Delete a user by ID and persist the updated data."""
+    if user_id not in users_map:
+        return False
 
-def download_dataset():
+    del users_map[user_id]
+    save_users_to_csv()
+    return True
+
+def update_user_wallet_balance(user_id: int, new_balance: float) -> Optional[dict]:
     """
-    Downloads the Kaggle dataset and returns the local path
+    Updates the wallet balance for a user and persists the change to CSV.
     """
-    try:
-        path = kagglehub.dataset_download("niszarkiah/food-delivery")
-        return path
-    except Exception as e: # pylint: disable=broad-exception-caught
-        print(f"Error downloading dataset: {e}")
+    user = users_map.get(user_id)
+    if not user:
         return None
 
-def load_menu_items_from_csv():
+    user["walletBalance"] = _round_money(new_balance)
+    save_users_to_csv()
+    return user
+
+def add_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
     """
-    This loads menu items from the Kaggle dataset into memory at startup
+    Adds funds to a user's wallet.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+
+    current_balance = _round_money(user.get("walletBalance", 0.0))
+    return update_user_wallet_balance(user_id, current_balance + amount)
+
+def deduct_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
+    """
+    Deducts wallet funds if available.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+
+    current_balance = _round_money(user.get("walletBalance", 0.0))
+    if amount > current_balance:
+        return None  # Not enough funds
+
+    return update_user_wallet_balance(user_id, current_balance - amount)
+
+def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
+    """
+    Reads Menu csv file and returns raw rows.
+    """
+    try:
+        with open(file=file_path, mode='r', newline= '', encoding= 'utf-8')as file:
+            return list(csv.DictReader(file))
+    except FileNotFoundError:
+        return []
+
+def process_rows(rows: List[Dict[str, str]]) -> List[Dict]:
+    """
+    Processes raw CSV rows into structured menu items (deduplicated).
+    """
+    processed_items: List[dict] = []
+    seen_items = set()
+    item_counter = 1
+
+    for row in rows:
+        restaurant_id = int(row.get("restaurant_id", 0))
+        food_name = row.get("food_item", "Unknown Item")
+
+        unique_identifier = f"{restaurant_id}_{food_name}"
+
+        if unique_identifier in seen_items:
+            continue
+
+        seen_items.add(unique_identifier)
+
+        price = float(row.get("order_value", 10.0))
+
+        processed_items.append({
+            "itemId": item_counter,
+            "restaurantId": restaurant_id,
+            "name": food_name,
+            "description": f"Delicious {food_name}",
+            "price": price,
+            "isActive": True
+        })
+
+        item_counter += 1
+
+    return processed_items
+
+def load_menu_items_from_csv() -> None:
+    """
+    This loads menu items from the local CSV file into memory at startup
     """
     global menu_items # pylint: disable=global-statement
-    menu_items = []
-    dataset_path = download_dataset()
-    if not dataset_path:
-        return
-    csv_file_path = f"{dataset_path}/food_delivery.csv"
-
-    try:
-        seen_items = set()
-        item_counter = 1
-        with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
-            for row in csv.DictReader(file):
-                restaurant_id = int(row.get("restaurant_id", 0))
-                food_name = row.get("food_item", "Unknown Item")
-                unique_identifier = f"{restaurant_id}_{food_name}"
-                if unique_identifier not in seen_items:
-                    seen_items.add(unique_identifier)
-                    price = float(row.get("order_value", 10.0))
-                    menu_items.append({
-                        "itemId": item_counter,
-                        "restaurantId": restaurant_id,
-                        "name": food_name,
-                        "description": f"Delicious {food_name}",
-                        "price": price,
-                        "isActive": True
-                    })
-                    item_counter += 1
-    except FileNotFoundError:
-        pass
+    rows = read_menu_csv(MENU_CSV_FILE_PATH)
+    menu_items = process_rows(rows)
 
 
-def get_all_menu_items():
+def get_all_menu_items() -> List[dict]:
     """
     Returns all menu items in memory.
     """
     return menu_items
 
 
-def get_menu_item_by_id(item_id: int):
+def get_menu_item_by_id(item_id: int) -> Optional[dict]:
     """
     Returns one menu item by item id.
     """
@@ -149,7 +291,7 @@ def get_menu_item_by_id(item_id: int):
     return None
 
 
-def restaurant_exists(restaurant_id: int):
+def restaurant_exists(restaurant_id: int) -> bool:
     """
     Returns True when at least one menu item belongs to the restaurant.
     """
@@ -159,32 +301,38 @@ def restaurant_exists(restaurant_id: int):
     return False
 
 
-def get_active_menu_for_restaurant(restaurant_id: int):
+def get_active_menu_for_restaurant(restaurant_id: int, skip: int = 0, limit: int = 100
+) -> List[dict]:
     """
     Returns active menu items for one restaurant.
     """
-    return [
+    items = [
         item for item in menu_items
         if item.get("restaurantId") == restaurant_id and item.get("isActive", True)
     ]
+    return items[skip : skip + limit]
 
-def find_restaurants_by_food_item(food_name: str):
+def find_restaurants_by_food_item(food_name: str, skip: int = 0, limit: int = 100) -> List[dict]:
     """
-    Returns restaurants with the inputted food name. Only menu items with the food name are returned
+    Returns menu items with the inputted food name (paginated).
     """
     food = food_name.strip().lower()
-    results = {}
+    results = []
     for item in menu_items:
         if not item.get("isActive"):
             continue
         item_name = item.get("name", "").strip().lower()
         if food in item_name:
-            restaurant_id = item.get("restaurantId")
-            if restaurant_id not in results:
-                results[restaurant_id] = []
-            results[restaurant_id].append(item)
-    return results
-def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20):
+            results.append(item)
+    return results[skip : skip + limit]
+
+def create_order(
+    user_id: int,
+    restaurant_id: int,
+    items: list,
+    time_minutes: int = 20,
+    delivery_fee: float = 0.0,
+) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.
     """
@@ -196,40 +344,82 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
     estimated_delivery_minutes = 15 + 5 + time_minutes
     estimated_arrival_time = created_at + datetime.timedelta(
         minutes=estimated_delivery_minutes)
+    total_value = 0.0
+    for item_id in items:
+        item = get_menu_item_by_id(item_id)
+        if item:
+            total_value += item.get("price", 0.0)
+
+    delivery_fee = _round_money(delivery_fee)
+    total_value = _round_money(total_value)
+    total_cost = _round_money(total_value + delivery_fee)
 
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
-        "status": "pending",
+        "order_value": total_value,
+        "delivery_fee": delivery_fee,
+        "total_cost": total_cost,
+        "amount_paid": 0.0,
+        "amount_due": total_cost,
+        "wallet_applied": 0.0,
+        "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
         "estimatedArrivalTime": estimated_arrival_time.isoformat(),
-        "payment_status": "pending"
+        "payment_status": PaymentStatus.UNPAID.value,
+        "notifications": [],
+        "latestNotification": None,
+        "customerNotified": False
     }
 
     orders_map[NEXT_ORDER_ID] = new_order
     NEXT_ORDER_ID += 1
     return new_order
 
-def get_order_by_id(order_id: int):
+def get_order_by_id(order_id: int) -> Optional[dict]:
     """
     Returns an order by its ID.
     """
     return orders_map.get(order_id)
 
-def update_order_status(order_id: int, new_status: str):
+def update_order_status(order_id: int, new_status: str) -> Optional[dict]:
     """
     Updates the status of an existing order.
     """
     order = orders_map.get(order_id)
-    if order:
-        order["status"] = new_status
-        return order
-    return None
+    if not order:
+        return None
 
-def get_incoming_orders_for_restaurant(restaurant_id: int):
+    old_status = order["status"]
+
+    # Do not notify customer if the status does not change
+    if old_status == new_status:
+        order["customerNotified"] = False
+        order["latestNotification"] = None
+        return order
+
+    order["status"] = new_status
+
+    notification = {
+        "orderId": order["orderId"],
+        "userId": order["userId"],
+        "oldStatus": old_status,
+        "newStatus": new_status,
+        "message": (
+            f"Your order #{order['orderId']} status has changed from "
+            f"{old_status} to {new_status}."
+        ),
+        "sentAt": datetime.datetime.now().isoformat()
+    }
+    order["notifications"].append(notification)
+    order["latestNotification"] = notification
+    order["customerNotified"] = True
+    return order
+
+def get_incoming_orders_for_restaurant(restaurant_id: int) -> List[dict]:
     """
     Returns incoming orders for a specific restaurant.
     """
@@ -238,14 +428,22 @@ def get_incoming_orders_for_restaurant(restaurant_id: int):
         if order["restaurantId"] == restaurant_id
     ]
 
+def get_orders_for_user(user_id: int) -> List[dict]:
+    """
+    Returns all orders for a specific user.
+    """
+    return [
+        order for order in orders_map.values()
+        if order.get("userId") == user_id
+    ]
 
-def get_all_orders():
+def get_all_orders() -> List[dict]:
     """
     Returns all orders in memory.
     """
     return list(orders_map.values())
 
-def create_menu_item(restaurant_id: int, name: str, description: str, price: float):
+def create_menu_item(restaurant_id: int, name: str, description: str, price: float) -> dict:
     """
     Creates a new menu item for the given restaurant.
     """
@@ -261,7 +459,7 @@ def create_menu_item(restaurant_id: int, name: str, description: str, price: flo
     menu_items.append(new_item)
     return new_item
 
-def update_menu_item(item_id: int, restaurant_id: int, updates: dict):
+def update_menu_item(item_id: int, restaurant_id: int, updates: dict) -> Optional[dict]:
     """
     Updates an existing menu item.
     """
@@ -273,7 +471,7 @@ def update_menu_item(item_id: int, restaurant_id: int, updates: dict):
             return item
     return None
 
-def delete_menu_item(item_id: int, restaurant_id: int):
+def delete_menu_item(item_id: int, restaurant_id: int) -> bool:
     """
     Deletes an existing menu item.
     """
@@ -283,7 +481,7 @@ def delete_menu_item(item_id: int, restaurant_id: int):
             return True
     return False
 
-def update_payment_status(order_id: int, new_status: str):
+def update_payment_status(order_id: int, new_status: str) -> Optional[dict]:
     """
     Updates payment status of an order.
     """
@@ -294,3 +492,126 @@ def update_payment_status(order_id: int, new_status: str):
 
     order["payment_status"] = new_status
     return order
+
+def assign_delivery_to_order(order_id: int, delivery_id: int) -> Optional[dict]:
+    """
+    Assigns a delivery driver to an order.
+    """
+    order = orders_map.get(order_id)
+
+    if not order:
+        return None
+
+    order["deliveryId"] = delivery_id
+    order["status"] = OrderStatus.ASSIGNED.value
+
+    return order
+def cancel_order_in_database(order_id: int) -> Optional[dict]:
+    """
+    Marks an order as status = `cancelled` in db.
+    """
+    if order_id in orders_map:
+        orders_map[order_id]["status"] = OrderStatus.CANCELLED.value
+        return orders_map[order_id]
+    return None
+
+def modify_order_in_database(order_id: int, modify_data: dict) -> Optional[dict]:
+    """
+    Modify specific values in the order.
+    """
+    if order_id in orders_map:
+        for key, value in modify_data.items():
+            if value is not None:
+                orders_map[order_id][key] = value
+        return orders_map[order_id]
+    return None
+
+def get_restaurant_revenue(restaurant_id: int) -> float:
+    """
+    Calculates total revenue from accepted payments minus approved refunds.
+    """
+    total = 0.0
+    for order in orders_map.values():
+        if (
+            order.get("restaurantId") == restaurant_id
+            and order.get("payment_status") in (PaymentStatus.ACCEPTED.value, "paid")
+        ):
+            total += order.get("order_value", 0.0)
+    for refund in refunds_map.values():
+        if refund.get("status") == RefundStatus.APPROVED.value:
+            order = orders_map.get(refund.get("orderId"))
+            if order and order.get("restaurantId") == restaurant_id:
+                total -= order.get("order_value", 0.0)
+    return max(total, 0.0)
+
+
+def create_refund(order_id: int, user_id: int, reason: str, description: str) -> dict:
+    """Creates a new refund request stored in memory."""
+    global NEXT_REFUND_ID  # pylint: disable=global-statement
+    new_refund = {
+        "refundId": NEXT_REFUND_ID,
+        "orderId": order_id,
+        "userId": user_id,
+        "reason": reason,
+        "description": description,
+        "status": RefundStatus.PENDING.value,
+        "createdAt": datetime.datetime.now().isoformat(),
+    }
+    refunds_map[NEXT_REFUND_ID] = new_refund
+    NEXT_REFUND_ID += 1
+    return new_refund
+
+
+def get_refund_by_order_id(order_id: int) -> Optional[dict]:
+    """Returns the refund request for a given order, if any."""
+    for refund in refunds_map.values():
+        if refund.get("orderId") == order_id:
+            return refund
+    return None
+
+
+def get_all_refunds() -> List[dict]:
+    """Returns all refund requests in memory."""
+    return list(refunds_map.values())
+
+
+def get_refunds_for_user(user_id: int) -> List[dict]:
+    """Returns all refund requests submitted by a specific user."""
+    return [r for r in refunds_map.values() if r.get("userId") == user_id]
+
+
+def update_refund_status(refund_id: int, new_status: str) -> Optional[dict]:
+    """Updates the status of a refund request (approved or denied)."""
+    refund = refunds_map.get(refund_id)
+    if not refund:
+        return None
+    refund["status"] = new_status
+    return refund
+
+
+def create_promo_code(
+    code: str,
+    discount: float,
+    expiry: str,
+    assigned_users: list | None,
+) -> dict:
+    """Creates the promo code with parameters to ensure code is used once."""
+    promo_codes_map[code] = {
+        "code": code,
+        "discount": discount,
+        "expiry": expiry,
+        "assigned_users": assigned_users,
+        "used_by": [],
+    }
+    return promo_codes_map[code]
+
+
+def get_promo_code(code: str) -> Optional[dict]:
+    """Find promo code to check if it matches user input."""
+    return promo_codes_map.get(code)
+
+
+def mark_promo_used(code: str, user_id: int) -> None:
+    """Mark promo code as used so user doesn't use it more than once."""
+    if code in promo_codes_map:
+        promo_codes_map[code]["used_by"].append(user_id)

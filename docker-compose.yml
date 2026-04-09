@@ -8,5 +8,15 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/code/app
+      - ./users.csv:/code/users.csv
+      - ./menu_items.csv:/code/menu_items.csv
     environment:
       - PYTHONUNBUFFERED=1
+      - TZ=Etc/GMT+7
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api

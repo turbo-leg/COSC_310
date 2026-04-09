@@ -6,12 +6,20 @@ from typing import List
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from app import schemas
 
 
 from app.schemas import OrderResponse, TrackOrderResponse, UpdateOrderStatusRequest
 from app.services.order_service import order_service, calculate_total_cost_of_order
+from app.auth_helpers import require_restaurant_owner
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+@router.post("/")
+def place_order(order_request: schemas.OrderCreateRequest):
+    """
+    Endpoint to place a new order.
+    """
+    return order_service.place_order(order_request)
 
 @router.get("/restaurants/{restaurant_id}/orders", response_model=List[OrderResponse])
 def view_incoming_orders(restaurant_id: int):
@@ -20,6 +28,13 @@ def view_incoming_orders(restaurant_id: int):
     """
     return order_service.get_orders_by_restaurant(restaurant_id)
 
+@router.get("/users/{user_id}/orders", response_model=List[dict])
+def view_user_orders(user_id: int):
+    """
+    Retrieves all orders for a specific user.
+    """
+    return order_service.get_orders_by_user(user_id)
+
 class TotalOrderRequest(BaseModel):
     """
     Schema for total order calculations.
@@ -27,6 +42,8 @@ class TotalOrderRequest(BaseModel):
     item_ids: List[int]
     distance_km: float
     time_minutes: int
+    promo_code: str | None = None
+    user_id: int | None = None
 
 @router.post("/calculate-total-cost")
 def get_total_order_cost(request: TotalOrderRequest):
@@ -34,8 +51,10 @@ def get_total_order_cost(request: TotalOrderRequest):
     returns the total order cost.
     """
     total = calculate_total_cost_of_order(item_ids=request.item_ids,
-                                          distance_km=request.distance_km,
-                                          time_minutes=request.time_minutes)
+                                        distance_km=request.distance_km,
+                                        time_minutes=request.time_minutes,
+                                        promo_code=request.promo_code,
+                                        user_id=request.user_id)
     return {"total_order_cost":total}
 
 @router.get("/{order_id}/track", response_model=TrackOrderResponse)
@@ -61,7 +80,7 @@ class PaymentUpdateRequest(BaseModel):
     """
     Schema for updating the payment status.
     """
-    status: str  # "accepted" or "rejected"
+    status: str
 
 @router.patch("/{order_id}/payment")
 def update_payment_status(order_id: int, request: PaymentUpdateRequest):
@@ -74,6 +93,39 @@ def update_payment_status(order_id: int, request: PaymentUpdateRequest):
         return {"error": "Order not found"}
 
     return {
-        "message": f"Payment {request.status}",
+        "message": f"Payment succesful. Status: {request.status.lower()}",
         "order": updated_order
     }
+
+@router.get("/restaurants/{restaurant_id}/revenue")
+def get_restaurant_revenue(restaurant_id: int, user_id: int):
+    """
+    Returns total revenue of restaurant. Only viewed by owner.
+    """
+    require_restaurant_owner(user_id, restaurant_id)
+
+    revenue = order_service.get_restaurant_revenue(restaurant_id)
+    return{
+        "restaurant_id": restaurant_id,
+        "total_revenue": revenue
+    }
+
+@router.put("/{order_id}/cancel", response_model=schemas.OrderResponse)
+def cancel_order_endpoint(order_id: int):
+    """
+    Cancels order if preparation hasn't started yet.
+    """
+    return order_service.cancel_order(order_id)
+
+@router.put("/{order_id}/modify", response_model=schemas.OrderResponse)
+def modify_order_endpoint(order_id: int, modify_request: schemas.OrderModifyRequest):
+    """
+    Modify an order's details/items before preparation starts.
+    """
+    return order_service.modify_order(order_id, modify_request)
+@router.get("/restaurants/{restaurant_id}/track-delivery", response_model=List[TrackOrderResponse])
+def track_delivery_for_restaurant(restaurant_id: int):
+    """
+    Returns delivery tracking info for all orders of a restaurant.
+    """
+    return order_service.track_order_for_restaurant(restaurant_id)

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """
 Testing for payment accept/reject functionality.
 """
@@ -28,7 +29,7 @@ def test_accept_payment():
     })
 
     assert response.status_code == 200
-    assert response.json()["message"] == "Payment accepted"
+    assert response.json()["message"] == "Payment succesful. Status: accepted"
     assert response.json()["order"]["payment_status"] == "accepted"
 
 
@@ -42,9 +43,8 @@ def test_reject_payment():
         "status": "rejected"
     })
 
-    assert response.status_code == 200
-    assert response.json()["message"] == "Payment rejected"
-    assert response.json()["order"]["payment_status"] == "rejected"
+    assert response.status_code == 400
+    assert "Payment declined" in response.json()["detail"]
 
 
 def test_invalid_order_payment():
@@ -55,8 +55,8 @@ def test_invalid_order_payment():
         "status": "accepted"
     })
 
-    assert response.status_code == 200
-    assert response.json()["error"] == "Order not found"
+    assert response.status_code == 404
+    assert response.json()["detail"] == "order not Found"
 
 
 def test_default_payment_pending():

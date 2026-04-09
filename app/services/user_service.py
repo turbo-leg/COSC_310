@@ -4,9 +4,12 @@ services handle CRUD operations and interact with the in-memory storage
 controllers call these functions instead of accessing storage directly
 so that means that its a way of abstracting the storage from the controllers
 """
+from fastapi import HTTPException
+
 from app.schemas import UserCreate
 from app import database
 from app.services.auth_service import auth_service
+from app.constants import UserRole
 
 
 
@@ -33,11 +36,28 @@ def create_user(user: UserCreate):
     Creates and Saves new user.
     """
     hashed_password = auth_service.hash_password(user.password)
+    role_value = user.role.value if isinstance(user.role, UserRole) else str(user.role)
+    restaurant_id = user.restaurantId
+
+    if role_value == UserRole.RESTAURANT.value:
+        if restaurant_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="restaurantId is required for restaurant owners")
+        if not database.restaurant_exists(restaurant_id):
+            raise HTTPException(status_code=404, detail="Restaurant not found")
+        existing_owner = database.get_restaurant_owner(restaurant_id)
+        if existing_owner:
+            raise HTTPException(status_code=400, detail="This restaurant already has an owner")
+    else:
+        restaurant_id = None
+
     return database.create_user(
         name = user.name,
         email = user.email,
         password= hashed_password,
-        role= "Regular User"
+        role= role_value,
+        restaurant_id=restaurant_id
     )
 
 def verify_user_login(email:str, password:str):

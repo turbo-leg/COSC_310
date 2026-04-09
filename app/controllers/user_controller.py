@@ -4,11 +4,21 @@ controllers handle HTTP requests and delegate to services
 each endpoint validates input, calls services, and returns responses
 """
 from typing import List
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas import UserCreate, UserResponse, UserLogin
 from app.services import user_service
+from app.auth import get_user
+from app.auth_helpers import check_admin_role
+
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+@router.get("/me")
+def get_me(user=Depends(get_user)):
+    """
+    Returns the current logged in user's information.
+    """
+    return user
 
 @router.get("/", response_model=List[UserResponse])
 def read_users(skip: int = 0, limit: int = 100):
@@ -35,10 +45,16 @@ def create_user(user: UserCreate):
     db_user = user_service.get_user_by_email(email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    new_user =  user_service.create_user(user=user)
+    new_user = user_service.create_user(user=user)
     return {
         "message": "SUCCESSFUL",
-        "user": new_user
+        "user": {
+            "userId": new_user["userId"],
+            "name": new_user["name"],
+            "email": new_user["email"],
+            "role": new_user.get("role"),
+            "restaurantId": new_user.get("restaurantId"),
+        },
     }
 
 @router.post("/login")
@@ -54,14 +70,18 @@ def login_user(credentials: UserLogin):
         )
     return {
         "message" : "Login Successful",
-        "user": user
+        "user": {
+            "email": credentials.email
+        },
+        "token": user
     }
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int):
+def delete_user(user_id: int, user=Depends(get_user)):
     """
     Removes user by id.
     """
+    check_admin_role(user)
     success = user_service.delete_user(user_id=user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
