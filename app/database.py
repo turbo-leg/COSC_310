@@ -390,14 +390,14 @@ def update_menu_item_admin(item_id: int, updates: dict) -> Optional[dict]:
     """
     Updates a menu item as an admin (ignoring restaurantId).
     """
-    for i in range(len(menu_items)):
-        current_item = menu_items[i]
-        
+    for current_item in menu_items:
+
+
         if current_item.get("itemId") == item_id:
             val1 = updates.get("isActive")
-            if val1 != None:
+            if val1 is not None:
                 current_item["isActive"] = val1
-                
+
             return current_item
     return None
 
