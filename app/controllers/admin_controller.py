@@ -14,6 +14,7 @@ from app.schemas import AdminStatsResponse, MenuItemResponse
 class ToggleStockRequest(BaseModel):
     """Request payload for toggling stock status"""
     isActive: bool
+from app.schemas import AdminStatsResponse, PromoCreateRequest
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -49,3 +50,18 @@ def toggle_menu_item_stock(user_id: int, item_id: int, payload: ToggleStockReque
     updated_item_result = database.update_menu_item_admin(item_id, update_data)
 
     return updated_item_result
+    return admin_service.get_stats()
+
+@router.post("/promo")
+def create_promo(request: PromoCreateRequest, user_id: int):
+    """
+    Endpoint to create promo code data
+    """
+    require_admin(user_id)
+
+    return admin_service.create_promo(
+        code=request.code,
+        discount=request.discount,
+        expiry=request.expiry,
+        assigned_users=request.assigned_users
+    )

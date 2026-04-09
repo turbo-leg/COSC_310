@@ -13,6 +13,7 @@ MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
 orders_map: Dict[int, dict] = {}
+promo_codes_map: Dict[str, dict] = {}
 Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
@@ -122,13 +123,13 @@ def create_user(
     """
     global NEXT_ID # pylint: disable=global-statement
     new_user = {
-      "userId": NEXT_ID,
-      "name": name,
-      "email": email,
-      "password": password,
-      "role": role,
-      "restaurantId": restaurant_id
-   }
+        "userId": NEXT_ID,
+        "name": name,
+        "email": email,
+        "password": password,
+        "role": role,
+        "restaurantId": restaurant_id
+    }
     users_map[NEXT_ID] = new_user
     NEXT_ID += 1
     save_users_to_csv()
@@ -468,3 +469,31 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
         ):
             total += order.get("order_value", 0.0)
     return total
+
+def create_promo_code(code: str, discount: float, expiry: str, assigned_users: list | None):
+    """
+    Creates the promo code with parameters to ensure code is used once
+    """
+    promo_codes_map[code] = {
+        "code": code,
+        "discount": discount,
+        "expiry": expiry,
+        "assigned_users": assigned_users,
+        "used_by": []
+    }
+    return promo_codes_map[code]
+
+
+def get_promo_code(code: str):
+    """
+    Find promo code to check if it matches user input
+    """
+    return promo_codes_map.get(code)
+
+
+def mark_promo_used(code: str, user_id: int):
+    """
+    Mark promo code as used so user doesn't use it more than once
+    """
+    if code in promo_codes_map:
+        promo_codes_map[code]["used_by"].append(user_id)
