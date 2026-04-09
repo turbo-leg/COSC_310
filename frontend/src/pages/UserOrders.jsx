@@ -1,13 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { Package, Clock, XCircle, ArrowRight } from 'lucide-react';
+import { Package, Clock, XCircle, ArrowRight, RotateCcw, X } from 'lucide-react';
+
+const REFUND_REASONS = [
+  { value: 'never_arrived', label: 'Order never arrived' },
+  { value: 'wrong_order', label: 'Wrong order received' },
+  { value: 'poor_quality', label: 'Poor food quality' },
+  { value: 'missing_items', label: 'Items missing from order' },
+  { value: 'other', label: 'Other' },
+];
 
 export default function UserOrders() {
   const [orders, setOrders] = useState([]);
+  const [refundsByOrder, setRefundsByOrder] = useState({});
   const [loading, setLoading] = useState(true);
+  const [refundModal, setRefundModal] = useState(null);
+  const [refundReason, setRefundReason] = useState('never_arrived');
+  const [refundDescription, setRefundDescription] = useState('');
+  const [refundError, setRefundError] = useState('');
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
   const navigate = useNavigate();
-  
+
   const token = localStorage.getItem('token');
   const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const userId = decodedToken?.userId;
@@ -19,8 +33,16 @@ export default function UserOrders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/orders/users/${userId}/orders`);
-      setOrders(res.data.reverse());
+      const [ordersRes, refundsRes] = await Promise.all([
+        api.get(`/orders/users/${userId}/orders`),
+        api.get(`/refunds/user/${userId}`),
+      ]);
+      setOrders(ordersRes.data.reverse());
+      const map = {};
+      for (const r of refundsRes.data) {
+        map[r.orderId] = r;
+      }
+      setRefundsByOrder(map);
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,6 +60,42 @@ export default function UserOrders() {
     }
   };
 
+  const openRefundModal = (order) => {
+    setRefundModal(order);
+    setRefundReason('never_arrived');
+    setRefundDescription('');
+    setRefundError('');
+  };
+
+  const closeRefundModal = () => {
+    setRefundModal(null);
+    setRefundError('');
+  };
+
+  const handleRefundSubmit = async () => {
+    if (refundDescription.trim().length < 10) {
+      setRefundError('Please provide a description of at least 10 characters.');
+      return;
+    }
+    setRefundSubmitting(true);
+    setRefundError('');
+    try {
+      await api.post(`/orders/${refundModal.orderId}/refund`, {
+        user_id: userId,
+        reason: refundReason,
+        description: refundDescription.trim(),
+      });
+      closeRefundModal();
+      fetchOrders();
+      alert('Refund request submitted successfully.');
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      setRefundError(detail || 'Failed to submit refund request.');
+    } finally {
+      setRefundSubmitting(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
@@ -48,6 +106,35 @@ export default function UserOrders() {
       case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
       default: return 'bg-gray-100 text-gray-700';
     }
+  };
+
+  const canRequestRefund = (order) =>
+    order.status === 'delivered' &&
+    order.payment_status?.toLowerCase() === 'accepted' &&
+    !refundsByOrder[order.orderId];
+
+  const getRefundBadge = (orderId) => {
+    const refund = refundsByOrder[orderId];
+    if (!refund) return null;
+    if (refund.status === 'approved') {
+      return (
+        <span className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium border border-green-200 text-sm">
+          Refunded
+        </span>
+      );
+    }
+    if (refund.status === 'denied') {
+      return (
+        <span className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl font-medium border border-red-200 text-sm">
+          Refund Denied
+        </span>
+      );
+    }
+    return (
+      <span className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-amber-50 text-amber-700 rounded-xl font-medium border border-amber-200 text-sm">
+        <RotateCcw className="w-4 h-4" /> Refund Pending
+      </span>
+    );
   };
 
   return (
@@ -89,7 +176,7 @@ export default function UserOrders() {
                     {order.status}
                   </span>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-4 text-sm bg-gray-50 p-4 rounded-xl">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500">Payment:</span>
@@ -107,14 +194,14 @@ export default function UserOrders() {
               </div>
 
               <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto mt-4 md:mt-0 justify-center">
-                <button 
+                <button
                   onClick={() => navigate(`/order/${order.orderId}/track`)}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl font-medium hover:bg-black transition shadow-sm"
                 >
                   <Clock className="w-4 h-4" /> Track
                 </button>
                 {order.status === 'pending' && (
-                  <button 
+                  <button
                     onClick={() => handleCancel(order.orderId)}
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition"
                   >
@@ -122,16 +209,94 @@ export default function UserOrders() {
                   </button>
                 )}
                 {order.payment_status?.toLowerCase() === 'pending' && order.status !== 'cancelled' && (
-                  <button 
+                  <button
                     onClick={() => navigate(`/payment/${order.orderId}`, { state: { amount: order.order_value } })}
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-50 text-green-700 rounded-xl font-medium hover:bg-green-100 transition border border-green-200"
                   >
                     Make Payment <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
+                {getRefundBadge(order.orderId)}
+                {canRequestRefund(order) && (
+                  <button
+                    onClick={() => openRefundModal(order)}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-amber-50 text-amber-700 rounded-xl font-medium hover:bg-amber-100 transition border border-amber-200"
+                  >
+                    <RotateCcw className="w-4 h-4" /> Refund
+                  </button>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {refundModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md mx-4 relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={closeRefundModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-amber-100 rounded-xl">
+                <RotateCcw className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-900">Request Refund</h2>
+                <p className="text-sm text-gray-500">Order #{refundModal.orderId} &mdash; ${refundModal.order_value.toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Reason</label>
+                <select
+                  value={refundReason}
+                  onChange={e => setRefundReason(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-gray-50"
+                >
+                  {REFUND_REASONS.map(r => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <textarea
+                  value={refundDescription}
+                  onChange={e => setRefundDescription(e.target.value)}
+                  rows={4}
+                  placeholder="Please describe your issue in detail (min 10 characters)..."
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-gray-50 resize-none"
+                />
+                <p className="text-xs text-gray-400 mt-1">{refundDescription.length} / 500 characters</p>
+              </div>
+
+              {refundError && (
+                <p className="text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100">{refundError}</p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={closeRefundModal}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRefundSubmit}
+                  disabled={refundSubmitting}
+                  className="flex-1 px-6 py-3 bg-amber-500 text-white rounded-xl font-semibold hover:bg-amber-600 transition disabled:opacity-60"
+                >
+                  {refundSubmitting ? 'Submitting…' : 'Submit Request'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

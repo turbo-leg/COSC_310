@@ -7,15 +7,17 @@ import csv
 import datetime
 from typing import Dict, List, Optional
 from sqlalchemy.orm import declarative_base
-from app.constants import OrderStatus, PaymentStatus
+from app.constants import OrderStatus, PaymentStatus, RefundStatus
 CSV_FILE_PATH = "./users.csv" # Might need to adjust path
 MENU_CSV_FILE_PATH = "./menu_items.csv"
 users_map: Dict[int, dict] = {}
 menu_items: List[dict] = []
 orders_map: Dict[int, dict] = {}
+refunds_map: Dict[int, dict] = {}
 Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
+NEXT_REFUND_ID: int = 1
 
 
 def load_users_from_csv() -> None:
@@ -79,19 +81,38 @@ def get_all_users(skip: int = 0, limit: int = 100) -> List[dict]:
 
 def get_all_restaurants(skip: int = 0, limit: int = 100) -> List[dict]:
     """
-    Returns all users that have the 'restaurant' role.
+    Returns one row per distinct restaurant that appears in menu data.
+    Display name is Restaurant {id} (not tied to owner user display names).
+    userId mirrors restaurantId for routes that still use /restaurant/{id}.
     """
-    restaurants = [u for u in users_map.values() if u.get("role") == "restaurant"]
+    restaurant_ids = sorted(
+        {
+            int(item["restaurantId"])
+            for item in menu_items
+            if item.get("restaurantId") is not None
+        }
+    )
+    restaurants = [
+        {
+            "restaurantId": rid,
+            "userId": rid,
+            "name": f"Restaurant {rid}",
+            "role": "restaurant",
+        }
+        for rid in restaurant_ids
+    ]
     return restaurants[skip : skip + limit]
 
 def search_restaurants_by_name(query: str, skip: int = 0, limit: int = 100) -> List[dict]:
     """
-    Returns all restaurants that match the search query.
+    Returns menu-derived restaurants whose display name or id matches the query.
     """
     q = query.strip().lower()
+    all_rows = get_all_restaurants(skip=0, limit=10000)
     restaurants = [
-        u for u in users_map.values()
-        if u.get("role") == "restaurant" and q in u.get("name", "").lower()
+        r for r in all_rows
+        if q in r.get("name", "").lower()
+        or q in str(r.get("restaurantId", ""))
     ]
     return restaurants[skip : skip + limit]
 
@@ -443,7 +464,7 @@ def modify_order_in_database(order_id: int, modify_data: dict) -> Optional[dict]
 
 def get_restaurant_revenue(restaurant_id: int) -> float:
     """
-    Calculates total revenue from accepted payments for a restaurant.
+    Calculates total revenue from accepted payments minus approved refunds.
     """
     total = 0.0
     for order in orders_map.values():
@@ -452,4 +473,63 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
             and order.get("payment_status") in (PaymentStatus.ACCEPTED.value, "paid")
         ):
             total += order.get("order_value", 0.0)
-    return total
+    for refund in refunds_map.values():
+        if refund.get("status") == RefundStatus.APPROVED.value:
+            order = orders_map.get(refund.get("orderId"))
+            if order and order.get("restaurantId") == restaurant_id:
+                total -= order.get("order_value", 0.0)
+    return max(total, 0.0)
+
+
+def create_refund(order_id: int, user_id: int, reason: str, description: str) -> dict:
+    """
+    Creates a new refund request stored in memory.
+    """
+    global NEXT_REFUND_ID  # pylint: disable=global-statement
+    new_refund = {
+        "refundId": NEXT_REFUND_ID,
+        "orderId": order_id,
+        "userId": user_id,
+        "reason": reason,
+        "description": description,
+        "status": RefundStatus.PENDING.value,
+        "createdAt": datetime.datetime.now().isoformat(),
+    }
+    refunds_map[NEXT_REFUND_ID] = new_refund
+    NEXT_REFUND_ID += 1
+    return new_refund
+
+
+def get_refund_by_order_id(order_id: int) -> Optional[dict]:
+    """
+    Returns the refund request for a given order, if any.
+    """
+    for refund in refunds_map.values():
+        if refund.get("orderId") == order_id:
+            return refund
+    return None
+
+
+def get_all_refunds() -> List[dict]:
+    """
+    Returns all refund requests in memory.
+    """
+    return list(refunds_map.values())
+
+
+def get_refunds_for_user(user_id: int) -> List[dict]:
+    """
+    Returns all refund requests submitted by a specific user.
+    """
+    return [r for r in refunds_map.values() if r.get("userId") == user_id]
+
+
+def update_refund_status(refund_id: int, new_status: str) -> Optional[dict]:
+    """
+    Updates the status of a refund request (approved or denied).
+    """
+    refund = refunds_map.get(refund_id)
+    if not refund:
+        return None
+    refund["status"] = new_status
+    return refund
