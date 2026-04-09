@@ -18,6 +18,11 @@ Base = declarative_base()
 NEXT_ID: int = 1
 NEXT_ORDER_ID: int = 1
 
+def _round_money(value: float) -> float:
+    """
+    Rounds a float to 2 decimal places, representing money.
+    """
+    return round(value, 2)
 
 def load_users_from_csv() -> None:
     """
@@ -34,6 +39,7 @@ def load_users_from_csv() -> None:
             for row in reader:
                 user_id = int(row["userId"])
                 row["userId"] = user_id
+                row["walletBalance"] = _round_money(float(row.get("walletBalance", 0.0)))
                 restaurant_id_raw = row.get("restaurantId")
                 if restaurant_id_raw in (None, ""):
                     # Back-compat: historically restaurant owners used userId as restaurant_id
@@ -56,11 +62,14 @@ def save_users_to_csv():
     Saves all user data into a permanent CSV file.
     """
     with open(CSV_FILE_PATH, mode = 'w', newline = '', encoding= 'utf-8') as file:
-        field_names = ["userId", "name", "email", "password", "role", "restaurantId"]
+        field_names = [
+            "userId", "name", "email", "password", "role", "walletBalance", "restaurantId"
+        ]
         writer = csv.DictWriter(file, fieldnames = field_names)
         writer.writeheader()
         for user in users_map.values():
             row = dict(user)
+            row["walletBalance"] = _round_money(row.get("walletBalance", 0.0))
             if row.get("restaurantId") is None:
                 row["restaurantId"] = ""
             writer.writerow(row)
@@ -128,6 +137,7 @@ def create_user(
         "email": email,
         "password": password,
         "role": role,
+        "walletBalance": 0.0,
         "restaurantId": restaurant_id
     }
     users_map[NEXT_ID] = new_user
@@ -152,6 +162,43 @@ def delete_user(user_id: int) -> bool:
     del users_map[user_id]
     save_users_to_csv()
     return True
+
+def update_user_wallet_balance(user_id: int, new_balance: float) -> Optional[dict]:
+    """
+    Updates the wallet balance for a user and persists the change to CSV.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+
+    user["walletBalance"] = _round_money(new_balance)
+    save_users_to_csv()
+    return user
+
+def add_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
+    """
+    Adds funds to a user's wallet.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+
+    current_balance = _round_money(user.get("walletBalance", 0.0))
+    return update_user_wallet_balance(user_id, current_balance + amount)
+
+def deduct_wallet_funds(user_id: int, amount: float) -> Optional[dict]:
+    """
+    Deducts wallet funds if available.
+    """
+    user = users_map.get(user_id)
+    if not user:
+        return None
+
+    current_balance = _round_money(user.get("walletBalance", 0.0))
+    if amount > current_balance:
+        return None  # Not enough funds
+
+    return update_user_wallet_balance(user_id, current_balance - amount)
 
 def read_menu_csv(file_path: str) -> List[Dict[str, str]]:
     """
@@ -257,7 +304,14 @@ def find_restaurants_by_food_item(food_name: str, skip: int = 0, limit: int = 10
         if food in item_name:
             results.append(item)
     return results[skip : skip + limit]
-def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: int = 20) -> dict:
+
+def create_order(
+    user_id: int,
+    restaurant_id: int,
+    items: list,
+    time_minutes: int = 20,
+    delivery_fee: float = 0.0,
+) -> dict:
     """
     Creates a new order and stores it in memory, with ETA Tracking.
     """
@@ -275,12 +329,21 @@ def create_order(user_id: int, restaurant_id: int, items: list, time_minutes: in
         if item:
             total_value += item.get("price", 0.0)
 
+    delivery_fee = _round_money(delivery_fee)
+    total_value = _round_money(total_value)
+    total_cost = _round_money(total_value + delivery_fee)
+
     new_order = {
         "orderId": NEXT_ORDER_ID,
         "userId": user_id,
         "restaurantId": restaurant_id,
         "items": items,
         "order_value": total_value,
+        "delivery_fee": delivery_fee,
+        "total_cost": total_cost,
+        "amount_paid": 0.0,
+        "amount_due": total_cost,
+        "wallet_applied": 0.0,
         "status": OrderStatus.PENDING.value,
         "createdAt": created_at.isoformat(),
         "estimatedDeliveryMinutes": estimated_delivery_minutes,
