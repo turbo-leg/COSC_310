@@ -4,14 +4,6 @@
 This repository contains a Dockerized FastAPI backend and a React/Vite frontend for a food delivery system. The backend loads application state from CSV files at startup and persists user changes back to `users.csv`.
 
 ## Installation Instructions
-
-message.txt
-6 KB
-Sejal — 11:54 PM
-IF this works, htis is very last min
-
-Arpit — 11:54 PM
-AI-generated, gonna try updating this to sound less AI
 ﻿
 # Deployment and Handover Guide
 
