@@ -42,6 +42,8 @@ class TotalOrderRequest(BaseModel):
     item_ids: List[int]
     distance_km: float
     time_minutes: int
+    promo_code: str | None = None
+    user_id: int | None = None
 
 @router.post("/calculate-total-cost")
 def get_total_order_cost(request: TotalOrderRequest):
@@ -49,8 +51,10 @@ def get_total_order_cost(request: TotalOrderRequest):
     returns the total order cost.
     """
     total = calculate_total_cost_of_order(item_ids=request.item_ids,
-                                          distance_km=request.distance_km,
-                                          time_minutes=request.time_minutes)
+                                        distance_km=request.distance_km,
+                                        time_minutes=request.time_minutes,
+                                        promo_code=request.promo_code,
+                                        user_id=request.user_id)
     return {"total_order_cost":total}
 
 @router.get("/{order_id}/track", response_model=TrackOrderResponse)
