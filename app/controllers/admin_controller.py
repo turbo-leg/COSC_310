@@ -38,6 +38,14 @@ def get_admin_stats(
     require_admin(user_id)
     return admin_service.get_stats(start_date=start_date, end_date=end_date, status=status)
 
+@router.get("/menu", response_model=list[MenuItemResponse])
+def get_all_menu_items_admin(user_id: int):
+    """
+    Get all menu items globally across all restaurants for admin management.
+    """
+    require_admin(user_id)
+    return database.get_all_menu_items()
+
 @router.put("/menu/{item_id}/toggle-stock", response_model=MenuItemResponse)
 def toggle_menu_item_stock(user_id: int, item_id: int, payload: ToggleStockRequest):
     """
