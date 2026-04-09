@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
 import Login from '@/pages/Login'
@@ -18,11 +18,27 @@ import './App.css'
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark' ||
+      (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(prev => !prev);
 
   return (
     <Router>
-      <div className="min-h-screen bg-zinc-50 flex flex-col">
-        <Navbar token={token} setToken={setToken} />
+      <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300">
+        <Navbar token={token} setToken={setToken} toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
         
         <main className="flex-1">
           <Routes>
