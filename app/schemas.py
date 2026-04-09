@@ -5,7 +5,7 @@ they separate API contracts from database models for flexibility
 """
 from typing import List
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
-from app.constants import UserRole, OrderStatus
+from app.constants import UserRole, OrderStatus, RefundReason, RefundStatus
 
 
 class AdminStatsResponse(BaseModel):
@@ -92,6 +92,11 @@ class OrderResponse(BaseModel):
     userId: int
     items: List[int] = []
     order_value: float = 0.0
+    delivery_fee: float = 0.0
+    total_cost: float = 0.0
+    amount_paid: float = 0.0
+    amount_due: float = 0.0
+    wallet_applied: float = 0.0
     status: str
     payment_status: str = "pending"
     createdAt: str | None = None
@@ -105,7 +110,7 @@ class PaymentRequest(BaseModel):
     Schema for Payment Request.
     """
     order_id: int
-    credit_card: str
+    credit_card: str | None = None
 
 
 class PaymentResponse(BaseModel):
@@ -114,6 +119,10 @@ class PaymentResponse(BaseModel):
     """
     transaction_id: str
     message: str
+    wallet_applied: float
+    card_charged: float
+    remaining_wallet_balance: float
+    amount_due: float
 
 
 class TrackOrderResponse(BaseModel):
@@ -125,12 +134,55 @@ class TrackOrderResponse(BaseModel):
     estimatedArrivalTime: str
     minutesRemaining: int
 
+class WalletTopUpRequest(BaseModel):
+    """
+    Schema for adding money to the customer's wallet.
+    """
+    amount: float = Field(..., gt=0)
+
+class WalletBalanceResponse(BaseModel):
+    """
+    Schema for wallet balance response.
+    """
+    userId: int
+    walletBalance: float
 
 class UpdateOrderStatusRequest(BaseModel):
     """
     Schema for updating order status.
     """
     new_status: str
+
+
+class RefundCreateRequest(BaseModel):
+    """
+    Schema for creating a refund request.
+    """
+    user_id: int
+    reason: RefundReason
+    description: str = Field(..., min_length=10, max_length=500)
+
+
+class RefundResponse(BaseModel):
+    """
+    Schema for refund request response.
+    """
+    refundId: int
+    orderId: int
+    userId: int
+    reason: str
+    description: str
+    status: RefundStatus
+    createdAt: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RefundUpdateRequest(BaseModel):
+    """
+    Schema for admin to approve or deny a refund.
+    """
+    status: RefundStatus
 
 
 class UserBase(BaseModel):

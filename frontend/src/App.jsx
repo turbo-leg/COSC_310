@@ -13,6 +13,7 @@ import RestaurantOrders from '@/pages/RestaurantOrders'
 import OrderTracker from '@/pages/OrderTracker'
 import DeliveryManager from '@/pages/DeliveryManager'
 import RestaurantMenuManager from '@/pages/RestaurantMenuManager'
+import WalletPage from '@/pages/Wallet'
 
 import './App.css'
 
@@ -62,6 +63,10 @@ function App() {
             <Route path="/menu-manager" element={<RestaurantMenuManager />} />
             <Route path="/order/:id/track" element={<OrderTracker />} />
             <Route path="/dispatch" element={<DeliveryManager />} />
+            <Route
+              path="/wallet"
+              element={token ? <WalletPage /> : <Navigate to="/login" replace />}
+            />
           </Routes>
         </main>
       </div>

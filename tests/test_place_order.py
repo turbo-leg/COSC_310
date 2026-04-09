@@ -26,13 +26,14 @@ def setup_teardown():
     database.orders_map = {}
 
 def test_get_all_restaurants():
-    """Test retrieving all users with the restaurant role."""
+    """Test retrieving restaurants derived from menu restaurant ids."""
     response = client.get("/restaurants")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
-    assert data[0]["name"] == "Restaurant A"
+    assert data[0]["name"] == "Restaurant 100"
     assert data[0]["userId"] == 100
+    assert data[0]["restaurantId"] == 100
 
 def test_place_order_success():
     """Test placing a new order via the POST /orders endpoint."""

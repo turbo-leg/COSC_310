@@ -27,6 +27,7 @@ class OrderStatus(str, Enum):
 class PaymentStatus(str, Enum):
     """Supported payment states."""
     UNPAID = "pending"
+    PARTIAL = "partial"
     ACCEPTED = "accepted"
     REJECTED = "rejected"
 
@@ -39,3 +40,19 @@ class NotificationType(str, Enum):
     PAYMENT_REJECTED = "payment_rejected"
     DELIVERY_ASSIGNED = "delivery_assigned"
     ORDER_CANCELLED = "order_cancelled"
+
+
+class RefundStatus(str, Enum):
+    """Supported refund request states."""
+    PENDING = "pending"
+    APPROVED = "approved"
+    DENIED = "denied"
+
+
+class RefundReason(str, Enum):
+    """Supported reasons for requesting a refund."""
+    NEVER_ARRIVED = "never_arrived"
+    WRONG_ORDER = "wrong_order"
+    POOR_QUALITY = "poor_quality"
+    MISSING_ITEMS = "missing_items"
+    OTHER = "other"
