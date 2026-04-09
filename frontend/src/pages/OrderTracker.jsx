@@ -4,8 +4,22 @@ import api from '../lib/api';
 import { Map, Clock, ArrowLeft, Package, CheckCircle, Truck, Utensils } from 'lucide-react';
 
 function formatEtaDisplay(estimatedArrivalTime, minutesRemaining) {
-  const date = new Date(estimatedArrivalTime);
-  const hasValidDate = !Number.isNaN(date.getTime());
+  const minutes = Number(minutesRemaining);
+
+  // Prefer a local ETA computed from server-provided minutes remaining.
+  // This avoids timezone drift when server timestamps are timezone-naive.
+  let date = null;
+  if (Number.isFinite(minutes)) {
+    date = new Date(Date.now() + Math.max(0, minutes) * 60 * 1000);
+  } else if (estimatedArrivalTime) {
+    // Fallback: treat timezone-naive timestamps as UTC.
+    const looksNaive = typeof estimatedArrivalTime === 'string' &&
+      !estimatedArrivalTime.endsWith('Z') &&
+      !/[+-]\d{2}:\d{2}$/.test(estimatedArrivalTime);
+    date = new Date(looksNaive ? `${estimatedArrivalTime}Z` : estimatedArrivalTime);
+  }
+
+  const hasValidDate = date && !Number.isNaN(date.getTime());
 
   const dayLabel = hasValidDate
     ? date.toLocaleDateString([], {
@@ -22,7 +36,6 @@ function formatEtaDisplay(estimatedArrivalTime, minutesRemaining) {
     })
     : 'Unknown time';
 
-  const minutes = Number(minutesRemaining);
   if (!Number.isFinite(minutes)) {
     return {
       etaText: `${dayLabel} at ${timeLabel}`,

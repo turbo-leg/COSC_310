@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { Package, Clock, XCircle, ArrowRight, RotateCcw, X, Bell } from 'lucide-react';
@@ -21,24 +21,153 @@ export default function UserOrders() {
   const [refundError, setRefundError] = useState('');
   const [refundSubmitting, setRefundSubmitting] = useState(false);
   const [dismissedNotifications, setDismissedNotifications] = useState([]);
+  const [toastNotifications, setToastNotifications] = useState([]);
+  const seenNotificationIdsRef = useRef(new Set());
+  const initializedNotificationsRef = useRef(false);
+  const audioContextRef = useRef(null);
+  const soundUnlockedRef = useRef(false);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('token');
   const decodedToken = token ? JSON.parse(atob(token.split('.')[1])) : null;
   const userId = decodedToken?.userId;
 
+  const getAudioContext = () => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      return null;
+    }
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextClass();
+    }
+    return audioContextRef.current;
+  };
+
+  const unlockNotificationSound = async () => {
+    try {
+      const audioContext = getAudioContext();
+      if (!audioContext) {
+        return;
+      }
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      soundUnlockedRef.current = audioContext.state === 'running';
+    } catch {
+      soundUnlockedRef.current = false;
+    }
+  };
+
+  const playNotificationSound = async () => {
+    try {
+      const audioContext = getAudioContext();
+      if (!audioContext) {
+        return;
+      }
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      if (audioContext.state !== 'running') {
+        return;
+      }
+
+      const playTone = (frequency, startOffset, duration) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const start = audioContext.currentTime + startOffset;
+        const end = start + duration;
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, start);
+
+        gainNode.gain.setValueAtTime(0.0001, start);
+        gainNode.gain.exponentialRampToValueAtTime(0.09, start + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, end);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.start(start);
+        oscillator.stop(end);
+      };
+
+      // Two-note notification chime.
+      playTone(784, 0.0, 0.14); // G5
+      playTone(1047, 0.16, 0.18); // C6
+    } catch {
+      // Ignore audio playback issues (browser autoplay policy/device restrictions).
+    }
+  };
+
   useEffect(() => {
+    unlockNotificationSound();
+
+    const handleUserInteraction = () => {
+      unlockNotificationSound();
+    };
+
+    window.addEventListener('pointerdown', handleUserInteraction, { passive: true });
+    window.addEventListener('keydown', handleUserInteraction);
+
     fetchOrders();
+
+    const intervalId = setInterval(() => {
+      fetchOrders(true);
+    }, 8000);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('pointerdown', handleUserInteraction);
+      window.removeEventListener('keydown', handleUserInteraction);
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+    };
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const [ordersRes, refundsRes] = await Promise.all([
         api.get(`/orders/users/${userId}/orders`),
         api.get(`/refunds/user/${userId}`),
       ]);
-      setOrders(ordersRes.data.reverse());
+      const fetchedOrders = ordersRes.data.reverse();
+      setOrders(fetchedOrders);
+
+      const latestNotifications = fetchedOrders
+        .filter(order => order.customerNotified && order.latestNotification)
+        .map(order => {
+          const notification = order.latestNotification;
+          const id = `${order.orderId}-${notification.sentAt || notification.newStatus || 'status'}`;
+          return {
+            id,
+            orderId: order.orderId,
+            message: notification.message || `Order #${order.orderId} status changed to ${order.status}`,
+            sentAt: notification.sentAt,
+          };
+        });
+
+      if (!initializedNotificationsRef.current) {
+        latestNotifications.forEach(notification => seenNotificationIdsRef.current.add(notification.id));
+        initializedNotificationsRef.current = true;
+      } else {
+        const newNotifications = latestNotifications.filter(
+          notification => !seenNotificationIdsRef.current.has(notification.id)
+        );
+
+        if (newNotifications.length > 0) {
+          newNotifications.forEach(notification => seenNotificationIdsRef.current.add(notification.id));
+          setToastNotifications(prev => [...newNotifications, ...prev].slice(0, 3));
+          if (soundUnlockedRef.current) {
+            playNotificationSound();
+          }
+        }
+      }
+
       const map = {};
       for (const r of refundsRes.data) {
         map[r.orderId] = r;
@@ -47,7 +176,9 @@ export default function UserOrders() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -154,6 +285,32 @@ export default function UserOrders() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 md:p-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {toastNotifications.length > 0 && (
+        <div className="fixed top-20 right-4 z-50 w-full max-w-sm space-y-2">
+          {toastNotifications.map(notification => (
+            <div
+              key={notification.id}
+              className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 shadow-lg"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-emerald-800">Order Update</p>
+                  <p className="text-sm text-emerald-700">{notification.message}</p>
+                </div>
+                <button
+                  type="button"
+                  className="text-emerald-700 hover:text-emerald-900"
+                  onClick={() => setToastNotifications(prev => prev.filter(item => item.id !== notification.id))}
+                  aria-label="Dismiss popup"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center gap-4 mb-10">
         <div className="p-4 bg-secondary/20 text-blue-600 rounded-2xl">
           <Package className="w-8 h-8" />
