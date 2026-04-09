@@ -32,6 +32,7 @@ export default function WalletPage() {
 
   const [balance, setBalance] = useState(null);
   const [amount, setAmount] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -82,11 +83,20 @@ export default function WalletPage() {
       return;
     }
 
+    if (cardNumber.length !== 16) {
+      setError('Please enter a valid 16-digit card number to add funds.');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const { data } = await api.post('/wallet/top-up', { amount: numericAmount });
+      const { data } = await api.post('/wallet/top-up', {
+        amount: numericAmount,
+        credit_card: cardNumber,
+      });
       setBalance(data.walletBalance);
       setAmount('');
+      setCardNumber('');
       setSuccess(`Wallet updated successfully. New balance: ${formatCurrency(data.walletBalance)}`);
     } catch (err) {
       const status = err?.response?.status;
@@ -168,7 +178,7 @@ export default function WalletPage() {
               Top Up Wallet
             </CardTitle>
             <CardDescription>
-              Enter an amount to add funds to your wallet.
+                Enter an amount and card number to add funds to your wallet.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -184,6 +194,22 @@ export default function WalletPage() {
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="card-number">Card Number</Label>
+                <Input
+                  id="card-number"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength="16"
+                  placeholder="0000 0000 0000 0000"
+                  value={cardNumber}
+                  onChange={(event) => setCardNumber(event.target.value.replace(/\D/g, ''))}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Simulated payment: this card is only validated as a 16-digit number.
+                </p>
               </div>
 
               {error && (

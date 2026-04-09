@@ -52,11 +52,16 @@ describe('WalletPage', () => {
     );
 
     const amountInput = await screen.findByLabelText('Amount');
+    const cardInput = screen.getByLabelText('Card Number');
     await user.type(amountInput, '15');
+    await user.type(cardInput, '1234567812345678');
     await user.click(screen.getByRole('button', { name: 'Add Funds' }));
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/wallet/top-up', { amount: 15 });
+      expect(api.post).toHaveBeenCalledWith('/wallet/top-up', {
+        amount: 15,
+        credit_card: '1234567812345678',
+      });
     });
 
     const successBanner = await screen.findByText(/Wallet updated successfully/i);
