@@ -208,6 +208,7 @@ def calculate_total_cost_of_order(item_ids: List[int], distance_km: float,
         total_cost = max(total_cost, 0)
 
         # mark used
-        database.mark_promo_used(promo_code, user_id)
+        if user_id is not None:
+            database.mark_promo_used(promo_code, user_id)
 
     return round(total_cost, 2)
