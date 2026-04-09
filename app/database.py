@@ -61,7 +61,9 @@ def save_users_to_csv():
     Saves all user data into a permanent CSV file.
     """
     with open(CSV_FILE_PATH, mode = 'w', newline = '', encoding= 'utf-8') as file:
-        field_names = ["userId", "name", "email", "password", "role", "walletBalance", "restaurantId"]
+        field_names = [
+            "userId", "name", "email", "password", "role", "walletBalance", "restaurantId"
+        ]
         writer = csv.DictWriter(file, fieldnames = field_names)
         writer.writeheader()
         for user in users_map.values():
