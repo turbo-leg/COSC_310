@@ -1,6 +1,5 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function Navbar({ token, setToken }) {
   const navigate = useNavigate();
@@ -25,13 +24,13 @@ export function Navbar({ token, setToken }) {
     : null;
 
   return (
-    <nav className="border-b p-4 bg-white shadow-sm flex justify-between items-center">
+    <nav className="border-b p-7 bg-gradient-to-r from-sky-500 to-sky-400 shadow-2xl flex justify-between items-center">
       <div className="text-xl font-bold">
-        <Link to="/" className="text-zinc-900">FoodDelivery</Link>
+        <Link to="/" className="text-white text-2xl">FoodDelivery</Link>
       </div>
       <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         <Link to="/orders">
-          <Button variant="outline">My Orders</Button>
+          <Button variant="ghost" className = "text-xl text-white" >My Orders</Button>
         </Link>
         {!token ? (
           <>
@@ -59,7 +58,7 @@ export function Navbar({ token, setToken }) {
                 <Button variant="secondary">Admin UI</Button>
               </Link>
             )}
-            <Button variant="destructive" onClick={handleLogout}>
+            <Button variant="destructive" onClick={handleLogout} className = "text-xl text-zinc-800">
               Logout
             </Button>
           </>

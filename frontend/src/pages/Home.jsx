@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import api from '../lib/api';
 import {
-  Store,
-  ArrowRight,
-  Utensils,
   AlertCircle,
-  Search,
-  SearchX,
-  ShoppingBag,
+  ArrowRight,
   ChevronDown,
   ChevronUp,
   Crown,
+  Search,
+  SearchX,
+  ShoppingBag,
+  Store,
+  Utensils,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../lib/api';
 
 /** Restaurant owner id from JWT (same as restaurantId for owners). */
 function getOwnedRestaurantIdFromToken() {
@@ -83,18 +83,18 @@ export function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-6 md:p-12">
+    <div className="min-h-screen bg-slate-50 p-6 md:p-12">
       <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-200/50 shadow-sm transition-transform hover:scale-105">
+          <div className="w-16 h-16 bg-sky-100 text-sky-500 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-blue-200/50 shadow-sm transition-transform hover:scale-105">
             <Utensils className="w-8 h-8" />
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 pb-2">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 pb-2">
             Discover Great Places
           </h1>
-          <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-500 text-xl max-w-3xl mx-auto">
             Search our selection of top-tier restaurants and explore their menus instantly.
           </p>
         </div>
@@ -113,7 +113,7 @@ export function Home() {
           />
           <button 
             type="submit" 
-            className="absolute right-3 top-2.5 bottom-2.5 px-6 font-semibold bg-gray-900 hover:bg-black text-white rounded-full transition-colors flex items-center shadow-md hover:shadow-lg transform active:scale-95"
+            className="absolute right-3 top-2.5 bottom-2.5 px-6 font-semibold bg-zinc-800 hover:bg-black text-white rounded-full transition-colors flex items-center shadow-md hover:shadow-lg transform active:scale-95"
           >
             Search
           </button>
@@ -163,11 +163,11 @@ export function Home() {
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gray-50 text-gray-700 rounded-2xl group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors border border-gray-100 group-hover:border-blue-100 shadow-sm">
+                        <div className="p-3 bg-gray-50 text-gray-700 rounded-2xl group-hover:bg-blue-50 group-hover:text-sky-600 transition-colors border border-gray-100 group-hover:border-blue-100 shadow-sm">
                           <Store className="w-7 h-7" />
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-2xl font-bold text-gray-900 leading-tight pb-1">{r.name}</h3>
+                          <h3 className="text-2xl font-bold text-zinc-800 leading-tight pb-1">{r.name}</h3>
                           {isMine && (
                             <span
                               className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 px-2.5 py-0.5 text-xs font-semibold border border-amber-200"
@@ -195,7 +195,7 @@ export function Home() {
                         e.stopPropagation();
                         navigate(`/restaurant/${rid}`);
                       }}
-                      className="flex items-center gap-2 bg-gray-50 hover:bg-gray-900 text-gray-700 hover:text-white py-2 px-4 rounded-xl font-medium transition-all"
+                      className="flex items-center gap-2 bg-gray-50 hover:bg-sky-500 hover:shadow-lg text-gray-700 hover:text-white py-2 px-4 rounded-xl font-medium transition-all"
                     >
                       Order Now <ArrowRight className="w-4 h-4" />
                     </button>
