@@ -39,6 +39,12 @@ def load_users_from_csv() -> None:
                 user_id = int(row["userId"])
                 row["userId"] = user_id
                 row["walletBalance"] = _round_money(float(row.get("walletBalance", 0.0)))
+                restaurant_id_raw = row.get("restaurantId")
+                if restaurant_id_raw in (None, ""):
+                    # Back-compat: historically restaurant owners used userId as restaurant_id
+                    row["restaurantId"] = user_id if row.get("role") == "restaurant" else None
+                else:
+                    row["restaurantId"] = int(restaurant_id_raw)
                 users_map[user_id] = row
 
             if users_map:
@@ -55,21 +61,15 @@ def save_users_to_csv():
     Saves all user data into a permanent CSV file.
     """
     with open(CSV_FILE_PATH, mode = 'w', newline = '', encoding= 'utf-8') as file:
-        field_names = [
-            "userId", 
-            "name", 
-            "email", 
-            "password", 
-            "role",
-            "walletBalance"]
+        field_names = ["userId", "name", "email", "password", "role", "walletBalance", "restaurantId"]
         writer = csv.DictWriter(file, fieldnames = field_names)
         writer.writeheader()
         for user in users_map.values():
-            user_to_write = dict(user)  # Create a copy to avoid mutating the original
-            user_to_write["walletBalance"] = _round_money(
-                user_to_write.get("walletBalance", 0.0)
-                )
-            writer.writerow(user_to_write)
+            row = dict(user)
+            row["walletBalance"] = _round_money(row.get("walletBalance", 0.0))
+            if row.get("restaurantId") is None:
+                row["restaurantId"] = ""
+            writer.writerow(row)
 
 def init_storage() -> None:
     """
@@ -117,7 +117,13 @@ def get_user_by_email(email: str) -> Optional[dict]:
             return user
     return None
 
-def create_user(name: str, email: str, password:str, role:str) -> dict:
+def create_user(
+    name: str,
+    email: str,
+    password: str,
+    role: str,
+    restaurant_id: int | None = None
+) -> dict:
     """
     Creates a new user and add it to the csv file using save_users_to_csv
     """
@@ -128,12 +134,22 @@ def create_user(name: str, email: str, password:str, role:str) -> dict:
       "email": email,
       "password": password,
       "role": role,
-      "walletBalance": 0.0
+        "walletBalance": 0.0,
+        "restaurantId": restaurant_id
    }
     users_map[NEXT_ID] = new_user
     NEXT_ID += 1
     save_users_to_csv()
     return new_user
+
+def get_restaurant_owner(restaurant_id: int) -> Optional[dict]:
+    """
+    Returns the restaurant owner for a restaurant_id, if any.
+    """
+    for user in users_map.values():
+        if user.get("role") == "restaurant" and user.get("restaurantId") == restaurant_id:
+            return user
+    return None
 
 def delete_user(user_id: int) -> bool:
     """Delete a user by ID and persist the updated data."""
@@ -494,7 +510,7 @@ def get_restaurant_revenue(restaurant_id: int) -> float:
     for order in orders_map.values():
         if (
             order.get("restaurantId") == restaurant_id
-            and order.get("payment_status") == PaymentStatus.ACCEPTED.value
+            and order.get("payment_status") in (PaymentStatus.ACCEPTED.value, "paid")
         ):
             total += order.get("order_value", 0.0)
     return total

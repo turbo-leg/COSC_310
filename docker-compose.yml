@@ -8,5 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/code/app
+      - ./users.csv:/code/users.csv
+      - ./menu_items.csv:/code/menu_items.csv
     environment:
       - PYTHONUNBUFFERED=1

@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .theme {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif
+  }
+  :root {
+    --background: #fdfaf6; /* Papyrus/light sand */
+    --foreground: #3b3024; /* Dark brown test */
+    --card: #ffffff;
+    --card-foreground: #3b3024;
+    --popover: #ffffff;
+    --popover-foreground: #3b3024;
+    --primary: #d4af37; /* Gold */
+    --primary-foreground: #2b2316; /* Dark brown */
+    --secondary: #1f4277; /* Lapis Lazuli */
+    --secondary-foreground: #ffffff;
+    --muted: #f0e9dc;
+    --muted-foreground: #7a6a58;
+    --accent: #f0e9dc;
+    --accent-foreground: #3b3024;
+    --destructive: #cc3333;
+    --border: #e6dccd;
+    --input: #e6dccd;
+    --ring: #d4af37;
+    --chart-1: #d4af37;
+    --chart-2: #1f4277;
+    --chart-3: #c28e0e;
+    --chart-4: #4a6c9c;
+    --chart-5: #e6dccd;
+    --radius: 0.5rem;
+    --sidebar: #fdfaf6;
+    --sidebar-foreground: #3b3024;
+    --sidebar-primary: #d4af37;
+    --sidebar-primary-foreground: #2b2316;
+    --sidebar-accent: #f0e9dc;
+    --sidebar-accent-foreground: #3b3024;
+    --sidebar-border: #e6dccd;
+    --sidebar-ring: #d4af37;
+  }
+  .dark {
+    --background: #1a1614; /* Deep desert night */
+    --foreground: #e6dccd; /* Light sand */
+    --card: #241e1b;
+    --card-foreground: #e6dccd;
+    --popover: #241e1b;
+    --popover-foreground: #e6dccd;
+    --primary: #d4af37; /* Gold */
+    --primary-foreground: #1a1614;
+    --secondary: #2b5a9e; /* Lapis Lazuli (lighter for dark mode) */
+    --secondary-foreground: #ffffff;
+    --muted: #3a322d;
+    --muted-foreground: #a69886;
+    --accent: #3a322d;
+    --accent-foreground: #e6dccd;
+    --destructive: #ef5350;
+    --border: #3a322d;
+    --input: #3a322d;
+    --ring: #d4af37;
+    --chart-1: #d4af37;
+    --chart-2: #2b5a9e;
+    --chart-3: #c28e0e;
+    --chart-4: #4a6c9c;
+    --chart-5: #3a322d;
+    --sidebar: #1a1614;
+    --sidebar-foreground: #e6dccd;
+    --sidebar-primary: #d4af37;
+    --sidebar-primary-foreground: #1a1614;
+    --sidebar-accent: #3a322d;
+    --sidebar-accent-foreground: #e6dccd;
+    --sidebar-border: #3a322d;
+    --sidebar-ring: #d4af37;
+  }
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

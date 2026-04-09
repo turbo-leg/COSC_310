@@ -5,6 +5,7 @@ and creates the FastAPI app instance that Uvicorn runs
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import (
     user_controller, menu_controller, delivery_controller,
     order_controller, admin_controller, payment_controller, wallet_controller
@@ -22,6 +23,14 @@ async def lifespan(app_instance: FastAPI): # pylint: disable=unused-argument
     yield
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In development, allow all. Vite usually runs on localhost:5173
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(user_controller.router)
 app.include_router(menu_controller.router)

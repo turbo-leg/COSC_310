@@ -45,13 +45,16 @@ def create_user(user: UserCreate):
     db_user = user_service.get_user_by_email(email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    new_user =  user_service.create_user(user=user)
+    new_user = user_service.create_user(user=user)
     return {
         "message": "SUCCESSFUL",
         "user": {
+            "userId": new_user["userId"],
             "name": new_user["name"],
-            "email": new_user["email"]
-    }
+            "email": new_user["email"],
+            "role": new_user.get("role"),
+            "restaurantId": new_user.get("restaurantId"),
+        },
     }
 
 @router.post("/login")
