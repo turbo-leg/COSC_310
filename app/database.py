@@ -386,6 +386,21 @@ def update_menu_item(item_id: int, restaurant_id: int, updates: dict) -> Optiona
             return item
     return None
 
+def update_menu_item_admin(item_id: int, updates: dict) -> Optional[dict]:
+    """
+    Updates a menu item as an admin (ignoring restaurantId).
+    """
+    for i in range(len(menu_items)):
+        current_item = menu_items[i]
+        
+        if current_item.get("itemId") == item_id:
+            val1 = updates.get("isActive")
+            if val1 != None:
+                current_item["isActive"] = val1
+                
+            return current_item
+    return None
+
 def delete_menu_item(item_id: int, restaurant_id: int) -> bool:
     """
     Deletes an existing menu item.
