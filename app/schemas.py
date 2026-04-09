@@ -139,6 +139,12 @@ class WalletTopUpRequest(BaseModel):
     Schema for adding money to the customer's wallet.
     """
     amount: float = Field(..., gt=0)
+    credit_card: str = Field(
+        ...,
+        min_length=16,
+        max_length=16,
+        description="16-digit card number used to simulate top-up funding",
+    )
 
 class WalletBalanceResponse(BaseModel):
     """

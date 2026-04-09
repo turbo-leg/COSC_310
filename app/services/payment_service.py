@@ -4,7 +4,7 @@ Payment service logic.
 import uuid
 from fastapi import HTTPException
 from app import database
-from app.constants import PaymentStatus
+from app.constants import PaymentStatus, OrderStatus
 
 def _validate_credit_card(credit_card: str | None) -> str | None:
     """
@@ -82,6 +82,10 @@ def process_payment(order_id: int, payer_user_id: int, credit_card: str | None =
         transaction_id = f"RCPT_{uuid.uuid4().hex[:16]}"
 
     database.update_payment_status(order_id, PaymentStatus.ACCEPTED.value)
+
+    # Keep lifecycle state in sync with successful payment.
+    if order.get("status") == OrderStatus.PENDING.value:
+        database.update_order_status(order_id, OrderStatus.ACCEPTED.value)
 
     if not transaction_id:
         transaction_id = f"WALLET_{uuid.uuid4().hex[:12]}"

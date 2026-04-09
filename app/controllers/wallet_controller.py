@@ -17,4 +17,4 @@ def read_wallet(user=Depends(get_user)):
 @router.post("/top-up", response_model=WalletBalanceResponse)
 def add_wallet_funds(request: WalletTopUpRequest, user=Depends(get_user)):
     """Top up the authenticated customer's wallet."""
-    return top_up_wallet(user, request.amount)
+    return top_up_wallet(user, request.amount, request.credit_card)

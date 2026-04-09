@@ -57,7 +57,7 @@ def test_wallet_top_up_adds_money():
 
     response = client.post(
         "/wallet/top-up",
-        json={"amount": 25.5},
+        json={"amount": 25.5, "credit_card": "1234567812345678"},
         headers=_auth_header(user),
     )
 
@@ -84,7 +84,7 @@ def test_restaurant_cannot_use_wallet_endpoint():
 
     response = client.post(
         "/wallet/top-up",
-        json={"amount": 10.0},
+        json={"amount": 10.0, "credit_card": "1234567812345678"},
         headers=_auth_header(restaurant),
     )
 
